@@ -1,0 +1,118 @@
+==========================================
+SISTEMA DE RULETA DE PREMIOS - WHITE LABEL
+==========================================
+
+IMPORTANTE: Sistema 100% White Label
+------------------------------------
+
+Este sistema NO contiene ninguna marca específica.
+Viene preconfigurado con valores genéricos:
+
+✓ Nombre por defecto: "Ruleta de Premios"
+✓ Colores: Fondo claro (#f8fafc) con morado (#7c3aed) y negro (#1f2937)
+✓ Sin logos predefinidos
+✓ Animación de fondo simple con orbes en movimiento
+✓ Todos los textos configurables
+
+NUEVOS COLORES POR DEFECTO
+---------------------------
+
+✓ Fondo: Claro (#f8fafc - gris muy claro)
+✓ Color primario: Morado (#7c3aed - violet-600)
+✓ Color secundario: Negro (#1f2937 - gray-800)
+✓ Animación: Orbes de gradiente moviéndose suavemente
+
+SI VES FONDOS OSCUROS O COLORES ANTIGUOS
+-----------------------------------------
+
+El sistema detectará automáticamente colores antiguos
+y te sugerirá resetear. También puedes hacerlo manualmente:
+
+OPCIÓN 1 - Página de Reset (Recomendado):
+   1. Visita: http://localhost:5173/reset.html
+   2. Haz clic en "Resetear Sistema Completo"
+   3. El sistema se reiniciará automáticamente
+
+OPCIÓN 2 - Manual:
+   1. Abre las DevTools del navegador (F12)
+   2. Ve a la pestaña "Console"
+   3. Escribe: localStorage.clear()
+   4. Presiona Enter
+   5. Recarga la página (F5 o Ctrl+R)
+
+
+PERSONALIZACIÓN
+--------------
+
+1. Accede a /admin
+2. Contraseña: admin123
+3. Ve a la pestaña "Marca"
+4. Configura:
+   - Logo (URL)
+   - Nombre de tu empresa
+   - Colores corporativos (primario, secundario, fondo)
+   - Mensajes personalizados
+
+
+URLS DEL SISTEMA
+----------------
+
+/totem - Vista pública del tótem
+/admin - Panel de administración
+/reset.html - Herramienta de reseteo
+
+
+MEJORAS RECIENTES
+-----------------
+
+✓ DISEÑO DE RULETA SIMPLIFICADO Y LIMPIO
+  - Eliminados degradados problemáticos que se interrumpían
+  - Marco simple con borde de color sólido
+  - Sin efecto cortado, diseño completo y visible
+  - Indicador superior con círculo animado rojo
+  - Colores sólidos sin interrupciones
+  - Centro interactivo con diseño simple
+
+✓ CONTRASTE DE TEXTO MEJORADO EN RESULTADO
+  - Fondo blanco sólido para la tarjeta de premio
+  - Texto oscuro (negro/gris) sobre fondos claros
+  - Caja de premio con fondo amarillo claro (#fef3c7)
+  - Borde de color personalizado (color primario)
+  - Excelente legibilidad en todos los elementos
+
+✓ LÓGICA DE PREMIO CORREGIDA
+  - El premio ahora coincide EXACTAMENTE con la flecha superior
+  - Cálculo de rotación optimizado para precisión
+  - La flecha apunta hacia abajo desde arriba
+  - El segmento 0 siempre empieza en la parte superior
+
+✓ Vista optimizada para pantallas táctiles verticales
+  - Espaciado mejorado en toda la UI
+  - Inputs más grandes (h-16) para fácil toque
+  - Botones extra grandes con feedback táctil
+  - Mejor distribución del espacio vertical
+
+✓ Contraste de texto mejorado
+  - Texto oscuro sobre fondos claros
+  - Labels con font-semibold para mejor legibilidad
+  - Bordes más gruesos (border-2) para claridad
+  - Colores de acento en íconos
+
+✓ Ruleta mejorada para pantallas verticales
+  - Tamaño aumentado: 380px (móvil) y 450px (tablet)
+  - Flecha indicadora más grande y visible
+  - Botón de girar más prominente (py-6, text-3xl)
+  - Centro de la ruleta con gradiente de marca
+
+✓ Esquema de colores actualizado
+  - Fondo claro en lugar de oscuro
+  - Morado y negro como colores de acento
+  - Animación de fondo suave y moderna
+
+✓ Sistema 100% white-label
+  - "Ruleta de Premios" como título por defecto
+  - Sin referencias a marcas específicas
+  - Valores genéricos por defecto
+
+
+¡Listo para personalizar y usar!

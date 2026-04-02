@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resetear Sistema - Ruleta de Premios</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #1e293b;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        p {
+            color: #64748b;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .warning strong {
+            color: #92400e;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn-reset {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-back {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        
+        .btn-back:hover {
+            background: #cbd5e1;
+        }
+        
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .success.show {
+            display: block;
+        }
+        
+        .success strong {
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Resetear Sistema</h1>
+        <p>Esta herramienta elimina todos los datos almacenados localmente y restablece el sistema a su estado predeterminado white-label.</p>
+        
+        <div class="warning">
+            <strong>⚠️ Advertencia:</strong><br>
+            Esta acción eliminará:
+            <ul style="margin-top: 10px; margin-left: 20px; color: #92400e;">
+                <li>Configuración de marca personalizada</li>
+                <li>Todos los premios configurados</li>
+                <li>Todos los participantes registrados</li>
+                <li>Mensajes personalizados</li>
+                <li>Configuración del juego</li>
+            </ul>
+        </div>
+        
+        <div class="success" id="successMessage">
+            <strong>✅ ¡Listo!</strong><br>
+            El sistema ha sido reseteado exitosamente. Ahora verás "Tu Empresa" como nombre predeterminado.
+        </div>
+        
+        <button class="btn-reset" onclick="resetSystem()">
+            Resetear Sistema Completo
+        </button>
+        
+        <button class="btn-back" onclick="goBack()">
+            Volver al Sistema
+        </button>
+    </div>
+    
+    <script>
+        function resetSystem() {
+            if (confirm('¿Estás seguro de que quieres resetear todo el sistema?\n\nEsta acción NO se puede deshacer.')) {
+                // Clear all localStorage
+                localStorage.clear();
+                
+                // Show success message
+                document.getElementById('successMessage').classList.add('show');
+                
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            }
+        }
+        
+        function goBack() {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
