@@ -179,3 +179,22 @@
     line-height: 1.5;
   }
 }
+
+@keyframes pulse-light {
+  0%, 100% { opacity: 0.4; filter: brightness(1); }
+  50% { opacity: 1; filter: brightness(1.5) drop-shadow(0 0 5px currentColor); }
+}
+
+.animate-pulse-light {
+  animation: pulse-light 2s infinite ease-in-out;
+}
+
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.premium-gradient {
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+}

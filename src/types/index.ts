@@ -30,6 +30,10 @@ export interface BrandConfig {
   backgroundColor: string;
   isWhiteLabel: boolean;
   systemName: string;
+  centerLogoUrl?: string;
+  centerBgColor?: string;
+  centerBgSecondaryColor?: string;
+  logoText?: string;
 }
 
 export interface Messages {
@@ -59,6 +63,20 @@ export interface DemoConfig {
   screenBorderRadius: string;
 }
 
+export interface CarouselItem {
+  id: string;
+  imageUrl: string;
+  altText: string;
+}
+
+export interface CarouselConfig {
+  items: CarouselItem[];
+  backgroundColor: string;
+  speed: number;
+  grayscale: boolean;
+  active: boolean;
+}
+
 export interface AppState {
   brand: BrandConfig;
   prizes: Prize[];
@@ -66,4 +84,5 @@ export interface AppState {
   messages: Messages;
   gameConfig: GameConfig;
   demoConfig: DemoConfig;
+  carouselConfig: CarouselConfig;
 }

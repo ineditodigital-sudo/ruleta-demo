@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Prize } from '@/types';
 import { useApp } from '@/context/AppContext';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Monitor } from 'lucide-react';
+import { LogoCarousel } from './LogoCarousel';
 
 interface PrizeWheelProps {
   prizes: Prize[];
@@ -45,12 +46,21 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
       }
     }
 
-    // Calculate rotation to land on selected prize
+    // Calculate rotation to land EXACTLY on the middle of the selected prize
     const prizeIndex = activePrizes.findIndex((p) => p.id === selectedPrize.id);
     const segmentAngle = 360 / activePrizes.length;
-    const targetAngle = prizeIndex * segmentAngle;
-    const spins = 5 + Math.random() * 3;
-    const finalRotation = 360 * spins - targetAngle;
+    
+    // The middle of the segment
+    const targetAngle = (prizeIndex * segmentAngle) + (segmentAngle / 2);
+    
+    // We want to land at: currentFullTurns + EXTRA_STOPS + (360 - targetAngle)
+    const currentRotationMod = rotation % 360;
+    const extraSpins = (5 + Math.floor(Math.random() * 4)) * 360; // 5 to 8 full spins
+    
+    // Add a small random offset within the segment to make it look natural (not perfectly centered every time)
+    const randomOffset = (Math.random() - 0.5) * (segmentAngle * 0.6);
+    
+    const finalRotation = extraSpins + (360 - targetAngle) - currentRotationMod + randomOffset;
 
     setRotation(rotation + finalRotation);
 
@@ -63,9 +73,9 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
   const segmentAngle = 360 / activePrizes.length;
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-full h-full min-h-screen px-4 py-4 sm:py-6">
+    <div className="relative flex flex-col items-center justify-center w-full h-full px-6 py-2 md:px-10 overflow-hidden">
       {/* Main container with all visual elements */}
-      <div className="relative flex flex-col items-center justify-center w-full max-w-2xl gap-3 sm:gap-4">
+      <div className="relative flex flex-col items-center justify-center w-full max-w-2xl gap-2 sm:gap-1 md:gap-2">
         
         {/* Logo at top - always show */}
         <motion.div
@@ -77,14 +87,14 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
             <img
               src={state.brand.logoUrl}
               alt="Logo"
-              className="h-14 sm:h-16 md:h-20 object-contain max-w-[70vw]"
+              className="h-14 sm:h-10 md:h-12 object-contain max-w-[80vw]"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
           ) : (
             <h1 
-              className="text-2xl sm:text-3xl md:text-4xl font-black text-center"
+              className="text-2xl sm:text-3xl md:text-3xl font-black text-center"
               style={{ color: state.brand.primaryColor }}
             >
               {state.brand.companyName || 'RULETA DE PREMIOS'}
@@ -143,15 +153,15 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
               repeat: Infinity,
               ease: "easeInOut"
             }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center md:scale-90 lg:scale-100"
           >
             <div
-              className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-2xl border-4 border-white"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg border-4 border-white"
               style={{
                 background: `linear-gradient(135deg, ${state.brand.primaryColor}, ${state.brand.secondaryColor})`,
               }}
             >
-              <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" strokeWidth={4} />
+              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-white" strokeWidth={4} />
             </div>
             <div
               className="w-0 h-0 -mt-1"
@@ -167,6 +177,34 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
 
         {/* Wheel Container */}
         <div className="relative flex items-center justify-center w-full">
+          {/* LED Outer Ring */}
+          <div 
+            className="absolute rounded-full z-0 p-4 sm:p-6 lg:p-8 flex items-center justify-center transition-all duration-700"
+            style={{
+              width: 'min(92vw, 68vh, 520px)',
+              height: 'min(92vw, 68vh, 520px)',
+              background: `radial-gradient(circle, ${state.brand.primaryColor}20 0%, #000000 100%)`,
+              boxShadow: `0 0 40px ${state.brand.primaryColor}40`,
+              border: `4px solid ${state.brand.primaryColor}30`
+            }}
+          >
+            {/* LED Lights */}
+            {[...Array(24)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-2 h-2 sm:w-3 sm:h-3 rounded-full animate-pulse-light"
+                style={{
+                  top: '50%',
+                  left: '50%',
+                  backgroundColor: i % 2 === 0 ? state.brand.primaryColor : state.brand.secondaryColor,
+                  color: i % 2 === 0 ? state.brand.primaryColor : state.brand.secondaryColor,
+                  transform: `rotate(${i * 15}deg) translateY(-min(45vw, 33vh, 252px))`,
+                  animationDelay: `${i * 0.1}s`
+                }}
+              />
+            ))}
+          </div>
+
           <motion.div
             ref={wheelRef}
             animate={{ rotate: rotation }}
@@ -174,15 +212,27 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
               duration: spinDuration / 1000,
               ease: [0.25, 0.1, 0.25, 1],
             }}
-            className="relative rounded-full overflow-hidden"
+            className="relative rounded-full z-10"
             style={{
-              width: 'min(85vw, 65vh, 500px)',
-              height: 'min(85vw, 65vh, 500px)',
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 8px white, 0 0 0 12px ' + state.brand.primaryColor,
+              width: 'min(85vw, 60vh, 420px)',
+              height: 'min(85vw, 60vh, 420px)',
+              boxShadow: '0 20px 80px rgba(0, 0, 0, 0.5)',
             }}
           >
             {/* Prize segments */}
-            <svg className="w-full h-full" viewBox="0 0 200 200">
+            <svg className="w-full h-full drop-shadow-2xl" viewBox="0 0 200 200">
+              <defs>
+                <radialGradient id="glassGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                  <stop offset="0%" stopColor="white" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="white" stopOpacity="0" />
+                </radialGradient>
+                <linearGradient id="glossEffect" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="white" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="white" stopOpacity="0" />
+                  <stop offset="100%" stopColor="black" stopOpacity="0.1" />
+                </linearGradient>
+              </defs>
+
               {activePrizes.map((prize, index) => {
                 const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
                 const endAngle = ((index + 1) * segmentAngle - 90) * (Math.PI / 180);
@@ -201,8 +251,8 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
                 const largeArc = segmentAngle > 180 ? 1 : 0;
                 const pathData = `M ${x1} ${y1} L ${x2} ${y2} A ${radius} ${radius} 0 ${largeArc} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x1} ${y1} Z`;
 
-                const textAngle = (index * segmentAngle + segmentAngle / 2) * (Math.PI / 180);
-                const textRadius = radius * 0.65;
+                const textAngle = (index * segmentAngle + segmentAngle / 2 - 90) * (Math.PI / 180);
+                const textRadius = radius * 0.68;
                 const textX = 100 + Math.cos(textAngle) * textRadius;
                 const textY = 100 + Math.sin(textAngle) * textRadius;
                 const textRotation = index * segmentAngle + segmentAngle / 2;
@@ -212,58 +262,85 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
                     <path
                       d={pathData}
                       fill={prize.color}
-                      stroke="#ffffff"
-                      strokeWidth="2.5"
+                      stroke="rgba(255,255,255,0.4)"
+                      strokeWidth="0.5"
+                    />
+                    {/* Inner highlight for segment */}
+                    <path
+                      d={pathData}
+                      fill="url(#glassGradient)"
+                      className="pointer-events-none"
                     />
                     
                     <text
                       x={textX}
                       y={textY}
-                      fill={prize.textColor}
-                      fontSize={activePrizes.length > 6 ? "7" : "8.5"}
+                      fill={prize.textColor || "#ffffff"}
+                      fontSize={activePrizes.length > 8 ? "6.5" : "8"}
                       fontWeight="900"
                       textAnchor="middle"
                       dominantBaseline="middle"
                       transform={`rotate(${textRotation} ${textX} ${textY})`}
-                      className="pointer-events-none select-none uppercase"
+                      className="pointer-events-none select-none uppercase drop-shadow-md"
                       style={{ 
                         paintOrder: 'stroke fill',
-                        stroke: prize.textColor === '#ffffff' || prize.textColor === '#fff' ? '#00000040' : '#ffffff60',
-                        strokeWidth: '0.8px'
+                        stroke: 'rgba(0,0,0,0.2)',
+                        strokeWidth: '1px',
+                        letterSpacing: '-0.2px'
                       }}
                     >
-                      {prize.name.length > 12 ? prize.name.substring(0, 10) + '...' : prize.name}
+                      {prize.name.length > 20 ? prize.name.substring(0, 17) + '...' : prize.name}
                     </text>
                   </g>
                 );
               })}
+
+              {/* Global Gloss Overlay */}
+              <circle cx="100" cy="100" r="99" fill="url(#glossEffect)" className="pointer-events-none" />
+              <circle cx="100" cy="100" r="100" fill="none" stroke="white" strokeWidth="2" opacity="0.3" />
             </svg>
 
             {/* Center button */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
               <motion.button
                 whileHover={{ scale: isSpinning ? 1 : 1.08 }}
                 whileTap={{ scale: isSpinning ? 1 : 0.92 }}
                 onClick={spinWheel}
                 disabled={isSpinning || disabled}
-                className="relative rounded-full shadow-2xl flex items-center justify-center cursor-pointer disabled:cursor-not-allowed transition-all"
+                className="relative rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center justify-center cursor-pointer disabled:cursor-not-allowed transition-all border-[6px] border-white/90"
                 style={{ 
-                  background: `linear-gradient(135deg, ${state.brand.primaryColor} 0%, ${state.brand.secondaryColor} 100%)`,
-                  width: 'min(22vw, 16vh, 100px)',
-                  height: 'min(22vw, 16vh, 100px)',
+                  background: state.brand.centerBgSecondaryColor 
+                    ? `linear-gradient(135deg, ${state.brand.centerBgColor || '#ffffff'} 0%, ${state.brand.centerBgSecondaryColor} 100%)`
+                    : (state.brand.centerBgColor || '#ffffff'),
+                  width: 'min(24vw, 18vh, 110px)',
+                  height: 'min(24vw, 18vh, 110px)',
                 }}
               >
-                <div className="bg-white rounded-full flex items-center justify-center shadow-inner"
-                     style={{
-                       width: 'calc(100% - 12px)',
-                       height: 'calc(100% - 12px)',
-                     }}>
+                {/* 3D Inner Shadow for Button */}
+                <div className="absolute inset-0 rounded-full shadow-[inset_0_4px_8px_rgba(0,0,0,0.3)] pointer-events-none" />
+                
+                <div className="flex items-center justify-center w-full h-full p-2 relative z-10">
                   <motion.div 
-                    className="text-3xl sm:text-4xl"
+                    className="w-full h-full flex items-center justify-center"
                     animate={isSpinning ? { rotate: 360 } : {}}
                     transition={isSpinning ? { duration: 0.8, repeat: Infinity, ease: "linear" } : {}}
                   >
-                    {isSpinning ? '⚡' : '🎰'}
+                    {isSpinning ? (
+                      <span className="text-3xl sm:text-4xl text-indigo-600 drop-shadow-lg">⚡</span>
+                    ) : (
+                      state.brand.centerLogoUrl && state.brand.centerLogoUrl.trim() !== '' ? (
+                        <img 
+                          src={state.brand.centerLogoUrl} 
+                          alt="Center Logo" 
+                          className="w-full h-full object-contain p-1 drop-shadow-md"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <span className="text-3xl sm:text-4xl drop-shadow-lg">🎰</span>
+                      )
+                    )}
                   </motion.div>
                 </div>
               </motion.button>
@@ -280,7 +357,7 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="relative rounded-2xl sm:rounded-3xl text-white shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all w-full max-w-md font-black overflow-hidden mt-2"
+          className="relative rounded-2xl sm:rounded-3xl text-white shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all inline-block px-10 font-black overflow-hidden mt-3 sm:mt-10 md:mt-14 mx-auto"
           style={{ 
             background: isSpinning 
               ? `linear-gradient(135deg, ${state.brand.secondaryColor} 0%, ${state.brand.primaryColor} 100%)`
@@ -306,7 +383,7 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
             />
           )}
 
-          <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 py-4 sm:py-5 text-xl sm:text-2xl md:text-3xl">
+          <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 text-lg sm:text-xl md:text-2xl">
             {isSpinning ? (
               <>
                 {/* Mini ruleta animada */}
@@ -363,16 +440,32 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
           </span>
         </motion.button>
 
-        {/* Instruction text */}
         {!isSpinning && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-center text-gray-600 font-semibold text-sm sm:text-base mt-2"
+            className="text-center text-gray-600 font-semibold text-sm sm:text-base mt-1"
           >
             Toca el botón para descubrir tu premio
           </motion.p>
+        )}
+
+        {/* Carousel Section */}
+        {state.carouselConfig?.active && state.carouselConfig.items.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="w-full mt-2 sm:mt-3"
+          >
+            <LogoCarousel 
+              items={state.carouselConfig.items} 
+              backgroundColor={state.carouselConfig.backgroundColor}
+              speed={state.carouselConfig.speed}
+              grayscale={state.carouselConfig.grayscale}
+            />
+          </motion.div>
         )}
       </div>
     </div>

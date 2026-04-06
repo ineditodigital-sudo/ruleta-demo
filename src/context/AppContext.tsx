@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AppState, Prize, Participant, BrandConfig, Messages, GameConfig, DemoConfig } from '@/types';
+import { AppState, Prize, Participant, BrandConfig, Messages, GameConfig, DemoConfig, CarouselConfig } from '@/types';
 
 interface AppContextType {
   state: AppState;
@@ -11,6 +11,7 @@ interface AppContextType {
   updateMessages: (messages: Partial<Messages>) => void;
   updateGameConfig: (config: Partial<GameConfig>) => void;
   updateDemoConfig: (config: Partial<DemoConfig>) => void;
+  updateCarouselConfig: (config: Partial<CarouselConfig>) => void;
   resetDailyCount: () => void;
   exportLeads: () => void;
 }
@@ -24,6 +25,9 @@ const defaultState: AppState = {
     backgroundColor: '#f8fafc',
     isWhiteLabel: true,
     systemName: 'Ruleta de Premios',
+    centerLogoUrl: '',
+    centerBgColor: '#ffffff',
+    centerBgSecondaryColor: '#f3f4f6',
   },
   prizes: [
     {
@@ -107,6 +111,13 @@ const defaultState: AppState = {
     screenHeight: '54%',
     screenBorderRadius: '8px',
   },
+  carouselConfig: {
+    items: [],
+    backgroundColor: 'transparent',
+    speed: 20,
+    grayscale: false,
+    active: true,
+  },
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -114,7 +125,14 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(() => {
     const saved = localStorage.getItem('prizeWheelState');
-    return saved ? JSON.parse(saved) : defaultState;
+    if (!saved) return defaultState;
+    
+    const parsed = JSON.parse(saved);
+    // Migration: add carouselConfig if missing
+    if (!parsed.carouselConfig) {
+      parsed.carouselConfig = defaultState.carouselConfig;
+    }
+    return parsed;
   });
 
   useEffect(() => {
@@ -181,6 +199,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   };
 
+  const updateCarouselConfig = (config: Partial<CarouselConfig>) => {
+    setState((prev) => ({
+      ...prev,
+      carouselConfig: { ...prev.carouselConfig, ...config },
+    }));
+  };
+
   const resetDailyCount = () => {
     setState((prev) => ({
       ...prev,
@@ -223,6 +248,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateMessages,
         updateGameConfig,
         updateDemoConfig,
+        updateCarouselConfig,
         resetDailyCount,
         exportLeads,
       }}
