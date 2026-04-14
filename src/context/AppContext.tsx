@@ -1,8 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { AppState, Prize, Participant, BrandConfig, Messages, GameConfig, DemoConfig, CarouselConfig } from '@/types';
+
+// ── API URL ────────────────────────────────────────────────────────────────────
+// In production (cPanel) this resolves to /api.php on the same domain.
+// In local dev it will 404 and fall back to localStorage — that's expected.
+const API_URL = './api.php';
+
+// Disable server sync in local dev (Vite dev server can't run PHP)
+const IS_DEV = import.meta.env.DEV;
 
 interface AppContextType {
   state: AppState;
+  isSyncing: boolean;
   updateBrand: (brand: Partial<BrandConfig>) => void;
   addPrize: (prize: Prize) => void;
   updatePrize: (id: string, prize: Partial<Prize>) => void;
@@ -28,6 +37,10 @@ const defaultState: AppState = {
     centerLogoUrl: '',
     centerBgColor: '#ffffff',
     centerBgSecondaryColor: '#f3f4f6',
+    wheelBorderColor: '#1f2937',
+    cardBackgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundVideoUrl: '',
+    textColor: '#ffffff',
   },
   prizes: [
     {
@@ -102,6 +115,10 @@ const defaultState: AppState = {
     enableAnimations: true,
     spinDuration: 5000,
     wheelRotationSpeed: 2,
+    showPrizes: true,
+    adminPassword: 'Aumovio1314',
+    redirectUrl: '',
+    redirectDelay: 5,
   },
   demoConfig: {
     frameImageUrl: 'https://imagenes.inedito.digital/INEDITO%20DIGITAL/marco-totem-front.webp',
@@ -120,98 +137,133 @@ const defaultState: AppState = {
   },
 };
 
+// ── Migration helper ───────────────────────────────────────────────────────────
+function applyMigrations(parsed: AppState): AppState {
+  if (!parsed.carouselConfig) parsed.carouselConfig = defaultState.carouselConfig;
+  if (parsed.gameConfig && parsed.gameConfig.showPrizes === undefined)
+    parsed.gameConfig.showPrizes = defaultState.gameConfig.showPrizes;
+  if (parsed.gameConfig && (!parsed.gameConfig.adminPassword || parsed.gameConfig.adminPassword === 'admin123'))
+    parsed.gameConfig.adminPassword = defaultState.gameConfig.adminPassword;
+  if (parsed.brand && parsed.brand.wheelBorderColor === undefined)
+    parsed.brand.wheelBorderColor = defaultState.brand.wheelBorderColor;
+  if (parsed.brand && parsed.brand.cardBackgroundColor === undefined)
+    parsed.brand.cardBackgroundColor = defaultState.brand.cardBackgroundColor;
+  if (parsed.brand && parsed.brand.backgroundVideoUrl === undefined)
+    parsed.brand.backgroundVideoUrl = defaultState.brand.backgroundVideoUrl;
+  if (parsed.brand && parsed.brand.textColor === undefined)
+    parsed.brand.textColor = defaultState.brand.textColor;
+  if (parsed.gameConfig && parsed.gameConfig.redirectUrl === undefined)
+    parsed.gameConfig.redirectUrl = defaultState.gameConfig.redirectUrl;
+  if (parsed.gameConfig && parsed.gameConfig.redirectDelay === undefined)
+    parsed.gameConfig.redirectDelay = defaultState.gameConfig.redirectDelay;
+  return parsed;
+}
+
+// ── Server helpers ─────────────────────────────────────────────────────────────
+async function fetchRemoteState(): Promise<AppState | null> {
+  try {
+    const res = await fetch(API_URL, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data) return null;
+    return applyMigrations(data as AppState);
+  } catch {
+    return null;
+  }
+}
+
+async function pushRemoteState(state: AppState): Promise<void> {
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state),
+    });
+  } catch {
+    // If push fails, the localStorage copy is still the latest
+    console.warn('[Ruleta] No se pudo sincronizar con el servidor. Los cambios están guardados localmente.');
+  }
+}
+
+// ── Context ────────────────────────────────────────────────────────────────────
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(() => {
+    // Initial render: use localStorage as instant cache while we fetch from server
     const saved = localStorage.getItem('prizeWheelState');
     if (!saved) return defaultState;
-    
-    const parsed = JSON.parse(saved);
-    // Migration: add carouselConfig if missing
-    if (!parsed.carouselConfig) {
-      parsed.carouselConfig = defaultState.carouselConfig;
+    try {
+      return applyMigrations(JSON.parse(saved) as AppState);
+    } catch {
+      return defaultState;
     }
-    return parsed;
   });
 
+  const [isSyncing, setIsSyncing] = useState(!IS_DEV);
+  const isFirstLoad = useRef(true);
+
+  // ── On mount: load authoritative config from server ─────────────────────────
   useEffect(() => {
+    if (IS_DEV) return; // Skip in local dev — PHP not available
+    fetchRemoteState().then((remote) => {
+      if (remote) {
+        setState(remote);
+        localStorage.setItem('prizeWheelState', JSON.stringify(remote));
+      }
+      setIsSyncing(false);
+    });
+  }, []);
+
+  // ── On state change: persist to localStorage AND server ─────────────────────
+  useEffect(() => {
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      return; // Don't push on initial load (would overwrite server with stale cache)
+    }
     localStorage.setItem('prizeWheelState', JSON.stringify(state));
+    if (!IS_DEV) {
+      pushRemoteState(state);
+    }
   }, [state]);
 
-  const updateBrand = (brand: Partial<BrandConfig>) => {
-    setState((prev) => ({
-      ...prev,
-      brand: { ...prev.brand, ...brand },
-    }));
-  };
+  // ── Mutations ────────────────────────────────────────────────────────────────
+  const updateBrand = (brand: Partial<BrandConfig>) =>
+    setState((prev) => ({ ...prev, brand: { ...prev.brand, ...brand } }));
 
-  const addPrize = (prize: Prize) => {
-    setState((prev) => ({
-      ...prev,
-      prizes: [...prev.prizes, prize],
-    }));
-  };
+  const addPrize = (prize: Prize) =>
+    setState((prev) => ({ ...prev, prizes: [...prev.prizes, prize] }));
 
-  const updatePrize = (id: string, prize: Partial<Prize>) => {
+  const updatePrize = (id: string, prize: Partial<Prize>) =>
     setState((prev) => ({
       ...prev,
       prizes: prev.prizes.map((p) => (p.id === id ? { ...p, ...prize } : p)),
     }));
-  };
 
-  const deletePrize = (id: string) => {
-    setState((prev) => ({
-      ...prev,
-      prizes: prev.prizes.filter((p) => p.id !== id),
-    }));
-  };
+  const deletePrize = (id: string) =>
+    setState((prev) => ({ ...prev, prizes: prev.prizes.filter((p) => p.id !== id) }));
 
-  const addParticipant = (participant: Participant) => {
+  const addParticipant = (participant: Participant) =>
     setState((prev) => ({
       ...prev,
       participants: [...prev.participants, participant],
-      gameConfig: {
-        ...prev.gameConfig,
-        currentDailyCount: prev.gameConfig.currentDailyCount + 1,
-      },
+      gameConfig: { ...prev.gameConfig, currentDailyCount: prev.gameConfig.currentDailyCount + 1 },
     }));
-  };
 
-  const updateMessages = (messages: Partial<Messages>) => {
-    setState((prev) => ({
-      ...prev,
-      messages: { ...prev.messages, ...messages },
-    }));
-  };
+  const updateMessages = (messages: Partial<Messages>) =>
+    setState((prev) => ({ ...prev, messages: { ...prev.messages, ...messages } }));
 
-  const updateGameConfig = (config: Partial<GameConfig>) => {
-    setState((prev) => ({
-      ...prev,
-      gameConfig: { ...prev.gameConfig, ...config },
-    }));
-  };
+  const updateGameConfig = (config: Partial<GameConfig>) =>
+    setState((prev) => ({ ...prev, gameConfig: { ...prev.gameConfig, ...config } }));
 
-  const updateDemoConfig = (config: Partial<DemoConfig>) => {
-    setState((prev) => ({
-      ...prev,
-      demoConfig: { ...prev.demoConfig, ...config },
-    }));
-  };
+  const updateDemoConfig = (config: Partial<DemoConfig>) =>
+    setState((prev) => ({ ...prev, demoConfig: { ...prev.demoConfig, ...config } }));
 
-  const updateCarouselConfig = (config: Partial<CarouselConfig>) => {
-    setState((prev) => ({
-      ...prev,
-      carouselConfig: { ...prev.carouselConfig, ...config },
-    }));
-  };
+  const updateCarouselConfig = (config: Partial<CarouselConfig>) =>
+    setState((prev) => ({ ...prev, carouselConfig: { ...prev.carouselConfig, ...config } }));
 
-  const resetDailyCount = () => {
-    setState((prev) => ({
-      ...prev,
-      gameConfig: { ...prev.gameConfig, currentDailyCount: 0 },
-    }));
-  };
+  const resetDailyCount = () =>
+    setState((prev) => ({ ...prev, gameConfig: { ...prev.gameConfig, currentDailyCount: 0 } }));
 
   const exportLeads = () => {
     const csv = [
@@ -240,6 +292,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     <AppContext.Provider
       value={{
         state,
+        isSyncing,
         updateBrand,
         addPrize,
         updatePrize,
@@ -260,8 +313,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
 export const useApp = () => {
   const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useApp must be used within AppProvider');
-  }
+  if (!context) throw new Error('useApp must be used within AppProvider');
   return context;
 };

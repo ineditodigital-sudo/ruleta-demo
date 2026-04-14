@@ -26,15 +26,22 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Auto-transition from splash to registration
+  const cardBg = state.brand.cardBackgroundColor || 'rgba(0, 0, 0, 0.7)';
+  const finalCardBg = cardBg.startsWith('#') ? `${cardBg}cc` : cardBg;
+
+  // Auto-transition from splash to next step
   React.useEffect(() => {
     if (step === 'splash') {
       const timer = setTimeout(() => {
-        setStep('registration');
+        if (state.gameConfig.requireRegistration) {
+          setStep('registration');
+        } else {
+          setStep('wheel');
+        }
       }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [step]);
+  }, [step, state.gameConfig.requireRegistration]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -56,7 +63,10 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
   const handleSpinComplete = (prize: Prize) => {
     const participant: Participant = {
       id: Date.now().toString(),
-      ...formData,
+      name: formData.name.trim() || 'Invitado',
+      email: formData.email.trim() || 'No registrado',
+      phone: formData.phone.trim() || 'No registrado',
+      acceptedTerms: formData.acceptedTerms,
       prizeWon: prize,
       timestamp: new Date().toISOString(),
     };
@@ -68,12 +78,18 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
   };
 
   const handleReset = () => {
+    const delay = (state.gameConfig.redirectDelay ?? 5) * 1000;
+    const url = state.gameConfig.redirectUrl?.trim();
     setTimeout(() => {
-      setStep('splash');
-      setFormData({ name: '', email: '', phone: '', acceptedTerms: false });
-      setWonPrize(null);
-      setErrors({});
-    }, 5000);
+      if (url) {
+        window.location.href = url;
+      } else {
+        setStep('splash');
+        setFormData({ name: '', email: '', phone: '', acceptedTerms: false });
+        setWonPrize(null);
+        setErrors({});
+      }
+    }, delay);
   };
 
   React.useEffect(() => {
@@ -89,31 +105,26 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
       className="flex flex-col items-center justify-start sm:justify-center overflow-y-auto overflow-x-hidden relative w-full h-full pb-10 sm:pb-0"
       style={{
         minHeight: '100dvh', // Dynamic viewport height for mobile
-        backgroundColor: state.brand.backgroundColor,
+        isolation: 'isolate',
+        zIndex: 0,
       }}
     >
-      {/* Premium Animated Background */}
+      {/* Background */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <motion.div 
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, 50, 0],
-            y: [0, 30, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full blur-[100px] opacity-20"
-          style={{ backgroundColor: state.brand.primaryColor }}
+        <div 
+          className="absolute inset-0" 
+          style={{ backgroundColor: state.brand.backgroundColor }} 
         />
-        <motion.div 
-          animate={{
-            scale: [1.2, 1, 1.2],
-            x: [0, -40, 0],
-            y: [0, 60, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-[10%] -right-[10%] w-[60%] h-[60%] rounded-full blur-[120px] opacity-20"
-          style={{ backgroundColor: state.brand.secondaryColor }}
-        />
+        {state.brand.backgroundVideoUrl && (
+          <video
+            src={state.brand.backgroundVideoUrl}
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+        )}
       </div>
 
       <AnimatePresence mode="wait">
@@ -126,25 +137,15 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
             className="fixed inset-0 flex flex-col items-center justify-center z-50 p-6"
+            style={{ backgroundColor: state.brand.backgroundColor }}
           >
-            {/* Background Blur to focus on the loader */}
-            <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
 
             <motion.div
               initial={{ y: 20, opacity: 0, scale: 0.95 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               transition={{ delay: 0.1, duration: 0.8 }}
-              className="glass-morphism rounded-[3rem] p-12 sm:p-16 md:p-20 shadow-[0_32px_64px_rgba(0,0,0,0.3)] border border-white/30 flex flex-col items-center gap-10 relative z-10 overflow-hidden text-center"
+              className="flex flex-col items-center gap-10 relative z-10 text-center"
             >
-              {/* Spinning Glow in background of the card */}
-              <motion.div 
-                animate={{ rotate: 360 }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{ 
-                  background: `conic-gradient(from 0deg, transparent, ${state.brand.primaryColor}, transparent, ${state.brand.secondaryColor}, transparent)` 
-                }}
-              />
 
               {(state.brand.centerLogoUrl && state.brand.centerLogoUrl.trim() !== '') || (state.brand.logoUrl && state.brand.logoUrl.trim() !== '') ? (
                 <motion.div 
@@ -174,7 +175,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white drop-shadow-xl tracking-tighter">
+                  <h1 className="text-4xl sm:text-5xl md:text-7xl font-black drop-shadow-xl tracking-tighter" style={{ color: state.brand.textColor || '#ffffff' }}>
                     {state.brand.companyName}
                   </h1>
                 </motion.div>
@@ -245,27 +246,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                     <circle cx="50" cy="50" r="8" fill={state.brand.primaryColor} />
                   </motion.svg>
                 </div>
-                
-                {/* Text Indicator */}
-                <div className="flex flex-col items-center gap-2">
-                  <motion.p 
-                    className="text-white text-xl sm:text-2xl font-black tracking-[0.3em] uppercase drop-shadow-lg"
-                    animate={{ opacity: [0.4, 1, 0.4] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    Iniciando
-                  </motion.p>
-                  <div className="flex gap-1">
-                    {[...Array(3)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{ y: [0, -5, 0] }}
-                        transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }}
-                        className="w-1.5 h-1.5 rounded-full bg-white/60"
-                      />
-                    ))}
-                  </div>
-                </div>
+
               </motion.div>
             </motion.div>
           </motion.div>
@@ -283,7 +264,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
             <div 
               className="rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 md:p-8 lg:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.7)] border-2 border-white/10 w-full max-w-xl sm:max-w-2xl md:max-w-lg relative z-10 overflow-hidden my-auto"
               style={{
-                background: 'rgba(0, 0, 0, 0.7)',
+                background: finalCardBg,
                 backdropFilter: 'blur(24px)'
               }}
             >
@@ -331,23 +312,24 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
               {/* Premium Form Fields - Responsive Heights */}
               <div className="space-y-4 sm:space-y-8 md:space-y-4 lg:space-y-6 relative z-10">
                 <div className="relative group">
-                  <Label htmlFor="name" className="text-white text-base sm:text-lg md:text-sm lg:text-base font-black mb-1 sm:mb-2 block flex items-center gap-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-                    <User className="w-5 h-5 shrink-0 text-white/80" />
+                  <Label htmlFor="name" className="text-base sm:text-lg md:text-sm lg:text-base font-black mb-1 sm:mb-2 block flex items-center gap-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" style={{ color: state.brand.textColor || '#ffffff' }}>
+                    <User className="w-5 h-5 shrink-0" style={{ color: state.brand.textColor || '#ffffff' }} />
                     NOMBRE COMPLETO
                   </Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
-                    className="h-14 sm:h-16 md:h-12 lg:h-14 text-base sm:text-xl md:text-base bg-white/10 border-2 border-white/10 text-white placeholder:text-white/30 focus:border-white focus:bg-white/15 focus:ring-4 focus:ring-white/5 rounded-xl sm:rounded-2xl font-bold px-4 sm:px-6 transition-all duration-300"
+                    className="h-14 sm:h-16 md:h-12 lg:h-14 text-base sm:text-xl md:text-base bg-white/10 border-2 border-white/10 placeholder:text-white/30 focus:border-white focus:bg-white/15 focus:ring-4 focus:ring-white/5 rounded-xl sm:rounded-2xl font-bold px-4 sm:px-6 transition-all duration-300"
+                    style={{ color: state.brand.textColor || '#ffffff' }}
                     placeholder="Escribe tu nombre..."
                   />
                   {errors.name && <p className="text-red-400 mt-1 md:mt-2 text-xs sm:text-base font-black uppercase tracking-wider drop-shadow-sm">{errors.name}</p>}
                 </div>
 
                 <div className="relative group">
-                  <Label htmlFor="email" className="text-white text-base sm:text-lg md:text-sm lg:text-base font-black mb-1 sm:mb-2 block flex items-center gap-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-                    <Mail className="w-5 h-5 shrink-0 text-white/80" />
+                  <Label htmlFor="email" className="text-base sm:text-lg md:text-sm lg:text-base font-black mb-1 sm:mb-2 block flex items-center gap-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" style={{ color: state.brand.textColor || '#ffffff' }}>
+                    <Mail className="w-5 h-5 shrink-0" style={{ color: state.brand.textColor || '#ffffff' }} />
                     CORREO ELECTRÓNICO
                   </Label>
                   <Input
@@ -355,15 +337,16 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                     type="email"
                     value={formData.email}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
-                    className="h-14 sm:h-16 md:h-12 lg:h-14 text-base sm:text-xl md:text-base bg-white/10 border-2 border-white/10 text-white placeholder:text-white/30 focus:border-white focus:bg-white/15 focus:ring-4 focus:ring-white/5 rounded-xl sm:rounded-2xl font-bold px-4 sm:px-6 transition-all duration-300"
+                    className="h-14 sm:h-16 md:h-12 lg:h-14 text-base sm:text-xl md:text-base bg-white/10 border-2 border-white/10 placeholder:text-white/30 focus:border-white focus:bg-white/15 focus:ring-4 focus:ring-white/5 rounded-xl sm:rounded-2xl font-bold px-4 sm:px-6 transition-all duration-300"
+                    style={{ color: state.brand.textColor || '#ffffff' }}
                     placeholder="ejemplo@correo.com"
                   />
                   {errors.email && <p className="text-red-400 mt-1 md:mt-2 text-xs sm:text-base font-black uppercase tracking-wider drop-shadow-sm">{errors.email}</p>}
                 </div>
 
                 <div className="relative group">
-                  <Label htmlFor="phone" className="text-white text-base sm:text-lg md:text-sm lg:text-base font-black mb-1 sm:mb-2 block flex items-center gap-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-                    <Phone className="w-5 h-5 shrink-0 text-white/80" />
+                  <Label htmlFor="phone" className="text-base sm:text-lg md:text-sm lg:text-base font-black mb-1 sm:mb-2 block flex items-center gap-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" style={{ color: state.brand.textColor || '#ffffff' }}>
+                    <Phone className="w-5 h-5 shrink-0" style={{ color: state.brand.textColor || '#ffffff' }} />
                     TELÉFONO / WHATSAPP
                   </Label>
                   <Input
@@ -371,7 +354,8 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                     type="tel"
                     value={formData.phone}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, phone: e.target.value })}
-                    className="h-14 sm:h-16 md:h-12 lg:h-14 text-base sm:text-xl md:text-base bg-white/10 border-2 border-white/10 text-white placeholder:text-white/30 focus:border-white focus:bg-white/15 focus:ring-4 focus:ring-white/5 rounded-xl sm:rounded-2xl font-bold px-4 sm:px-6 transition-all duration-300"
+                    className="h-14 sm:h-16 md:h-12 lg:h-14 text-base sm:text-xl md:text-base bg-white/10 border-2 border-white/10 placeholder:text-white/30 focus:border-white focus:bg-white/15 focus:ring-4 focus:ring-white/5 rounded-xl sm:rounded-2xl font-bold px-4 sm:px-6 transition-all duration-300"
+                    style={{ color: state.brand.textColor || '#ffffff' }}
                     placeholder="+52 000 000 0000"
                   />
                   {errors.phone && <p className="text-red-400 mt-1 md:mt-2 text-xs sm:text-base font-black uppercase tracking-wider drop-shadow-sm">{errors.phone}</p>}
@@ -486,7 +470,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
               transition={{ type: "spring", stiffness: 100 }}
               className="rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-8 lg:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.8)] border-2 border-white/20 relative z-20 overflow-hidden mx-auto w-full max-w-sm sm:max-w-md md:max-w-lg"
               style={{
-                background: 'rgba(0, 0, 0, 0.75)',
+                background: finalCardBg,
                 backdropFilter: 'blur(20px)'
               }}
             >
@@ -528,7 +512,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                 <CheckCircle className="w-16 h-16 sm:w-24 md:w-20 lg:w-24 text-green-400 mx-auto mb-4 md:mb-6 drop-shadow-[0_0_20px_rgba(74,222,128,0.7)]" />
               </motion.div>
 
-              <h2 className="text-3xl sm:text-4xl md:text-3xl lg:text-4xl font-black mb-4 sm:mb-6 text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] relative z-10 uppercase tracking-tighter">
+              <h2 className="text-3xl sm:text-4xl md:text-3xl lg:text-4xl font-black mb-4 sm:mb-6 relative z-10 uppercase tracking-tighter" style={{ color: state.brand.textColor || '#ffffff' }}>
                 ¡{state.messages.congratulations}!
               </h2>
 
@@ -547,19 +531,20 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                   <Sparkles className="w-16 md:w-24 h-16 md:h-24 text-white" />
                 </div>
 
-                <p className="text-xs sm:text-base font-bold text-white/50 mb-3 md:mb-4 uppercase tracking-[0.3em]">Premio Obtenido:</p>
+                <p className="text-xs sm:text-base font-bold mb-3 md:mb-4 uppercase tracking-[0.3em] opacity-50" style={{ color: state.brand.textColor || '#ffffff' }}>Premio Obtenido:</p>
                 <div className="flex flex-col items-center justify-center min-h-[4rem] sm:min-h-0">
                   <p
-                    className="text-2xl sm:text-5xl md:text-3xl lg:text-4xl font-black mb-3 md:mb-4 leading-tight text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)] w-full break-words px-2 text-center"
+                    className="text-2xl sm:text-5xl md:text-3xl lg:text-4xl font-black mb-3 md:mb-4 leading-tight w-full break-words px-2 text-center"
+                    style={{ color: state.brand.textColor || '#ffffff' }}
                   >
                     {wonPrize.name}
                   </p>
                 </div>
                 <div className="h-1.5 w-16 md:w-24 mx-auto mb-4 md:mb-6 rounded-full" style={{ backgroundColor: state.brand.primaryColor }} />
-                <p className="text-base sm:text-xl md:text-lg lg:text-xl font-medium text-white/95 leading-relaxed drop-shadow-md text-center max-w-[90%] mx-auto">{wonPrize.description}</p>
+                <p className="text-base sm:text-xl md:text-lg lg:text-xl font-medium leading-relaxed text-center max-w-[90%] mx-auto opacity-90" style={{ color: state.brand.textColor || '#ffffff' }}>{wonPrize.description}</p>
               </motion.div>
 
-              <p className="text-base sm:text-2xl md:text-lg lg:text-xl font-bold text-white mb-6 md:mb-8 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] relative z-10">{state.messages.prizeMessage}</p>
+              <p className="text-base sm:text-2xl md:text-lg lg:text-xl font-bold mb-6 md:mb-8 relative z-10" style={{ color: state.brand.textColor || '#ffffff' }}>{state.messages.prizeMessage}</p>
 
               <div className="flex flex-col items-center gap-2 relative z-10">
                 <div className="flex gap-1 mb-2">
@@ -573,7 +558,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                     />
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm font-bold text-white/40 tracking-[0.2em] uppercase">Redirigiendo automáticamente</p>
+                <p className="text-xs sm:text-sm font-bold tracking-[0.2em] uppercase opacity-50" style={{ color: state.brand.textColor || '#ffffff' }}>Redirigiendo automáticamente</p>
               </div>
             </motion.div>
           </motion.div>

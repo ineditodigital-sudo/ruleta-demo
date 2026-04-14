@@ -34,6 +34,10 @@ export interface BrandConfig {
   centerBgColor?: string;
   centerBgSecondaryColor?: string;
   logoText?: string;
+  wheelBorderColor?: string;
+  cardBackgroundColor?: string;
+  backgroundVideoUrl?: string;
+  textColor?: string;
 }
 
 export interface Messages {
@@ -52,6 +56,10 @@ export interface GameConfig {
   enableAnimations: boolean;
   spinDuration: number;
   wheelRotationSpeed: number;
+  showPrizes: boolean;
+  adminPassword?: string;
+  redirectUrl?: string;
+  redirectDelay?: number;
 }
 
 export interface DemoConfig {

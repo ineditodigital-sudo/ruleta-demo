@@ -183,9 +183,9 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
             style={{
               width: 'min(92vw, 68vh, 520px)',
               height: 'min(92vw, 68vh, 520px)',
-              background: `radial-gradient(circle, ${state.brand.primaryColor}20 0%, #000000 100%)`,
+              background: `radial-gradient(circle, ${state.brand.primaryColor}30 0%, ${state.brand.wheelBorderColor || '#000000'} 100%)`,
               boxShadow: `0 0 40px ${state.brand.primaryColor}40`,
-              border: `4px solid ${state.brand.primaryColor}30`
+              border: `4px solid ${state.brand.wheelBorderColor || '#000000'}50`
             }}
           >
             {/* LED Lights */}
@@ -272,25 +272,27 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
                       className="pointer-events-none"
                     />
                     
-                    <text
-                      x={textX}
-                      y={textY}
-                      fill={prize.textColor || "#ffffff"}
-                      fontSize={activePrizes.length > 8 ? "6.5" : "8"}
-                      fontWeight="900"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      transform={`rotate(${textRotation} ${textX} ${textY})`}
-                      className="pointer-events-none select-none uppercase drop-shadow-md"
-                      style={{ 
-                        paintOrder: 'stroke fill',
-                        stroke: 'rgba(0,0,0,0.2)',
-                        strokeWidth: '1px',
-                        letterSpacing: '-0.2px'
-                      }}
-                    >
-                      {prize.name.length > 20 ? prize.name.substring(0, 17) + '...' : prize.name}
-                    </text>
+                    {state.gameConfig.showPrizes && (
+                      <text
+                        x={textX}
+                        y={textY}
+                        fill={prize.textColor || "#ffffff"}
+                        fontSize={activePrizes.length > 8 ? "6.5" : "8"}
+                        fontWeight="900"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        transform={`rotate(${textRotation} ${textX} ${textY})`}
+                        className="pointer-events-none select-none uppercase drop-shadow-md"
+                        style={{ 
+                          paintOrder: 'stroke fill',
+                          stroke: 'rgba(0,0,0,0.2)',
+                          strokeWidth: '1px',
+                          letterSpacing: '-0.2px'
+                        }}
+                      >
+                        {prize.name.length > 20 ? prize.name.substring(0, 17) + '...' : prize.name}
+                      </text>
+                    )}
                   </g>
                 );
               })}
@@ -357,7 +359,7 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="relative rounded-2xl sm:rounded-3xl text-white shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all inline-block px-10 font-black overflow-hidden mt-3 sm:mt-10 md:mt-14 mx-auto"
+          className="relative rounded-2xl sm:rounded-3xl text-white shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all inline-block px-10 font-black overflow-hidden mt-8 sm:mt-10 md:mt-14 mx-auto"
           style={{ 
             background: isSpinning 
               ? `linear-gradient(135deg, ${state.brand.secondaryColor} 0%, ${state.brand.primaryColor} 100%)`

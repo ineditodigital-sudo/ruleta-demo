@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Input } from '@/app/components/ui/input';
@@ -10,7 +10,9 @@ import { Switch } from '@/app/components/ui/switch';
 import { Slider } from '@/app/components/ui/slider';
 import { Badge } from '@/app/components/ui/badge';
 import { Textarea } from '@/app/components/ui/textarea';
-import { Palette, Trophy, Settings, Download, Plus, Trash2, Eye, Users, MonitorSmartphone, Sparkles, Monitor, Lock, BarChart, Gift, Edit, Layout, Image as ImageIcon } from 'lucide-react';
+import { Palette, Trophy, Settings, Download, Plus, Trash2, Eye, EyeOff, Users, MonitorSmartphone, Sparkles, Monitor, Lock, BarChart, Gift, Edit, Layout, Image as ImageIcon, Menu, Upload, Video } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/app/components/ui/sheet';
 import { Prize } from '@/types';
 
 export const AdminView: React.FC = () => {
@@ -31,6 +33,10 @@ export const AdminView: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [editingPrize, setEditingPrize] = useState<Prize | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('prizes');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showConfigPassword, setShowConfigPassword] = useState(false);
   const [newPrize, setNewPrize] = useState<Partial<Prize>>({
     name: '',
     description: '',
@@ -42,9 +48,13 @@ export const AdminView: React.FC = () => {
     active: true,
   });
 
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const centerLogoInputRef = useRef<HTMLInputElement>(null);
+  const bgVideoInputRef = useRef<HTMLInputElement>(null);
+
   const handleLogin = () => {
     // Simple password check (in production, use proper authentication)
-    if (password === 'admin123') {
+    if (password === (state.gameConfig.adminPassword || 'Aumovio1314')) {
       setIsAuthenticated(true);
     } else {
       alert('Contraseña incorrecta');
@@ -95,9 +105,6 @@ export const AdminView: React.FC = () => {
               <Button onClick={handleLogin} className="w-full">
                 Iniciar Sesión
               </Button>
-              <p className="text-xs text-center text-gray-500">
-                Contraseña por defecto: admin123
-              </p>
             </div>
           </CardContent>
         </Card>
@@ -113,13 +120,97 @@ export const AdminView: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Panel de Administración
-          </h1>
-          <p className="text-slate-400">
-            Gestiona tu sistema de ruleta de premios
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              Panel de Administración
+            </h1>
+            <p className="text-slate-400">
+              Gestiona tu sistema de ruleta de premios
+            </p>
+          </div>
+
+          {/* Mobile Sidebar Trigger */}
+          <div className="md:hidden flex items-center justify-between bg-slate-800/50 p-3 rounded-xl border border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-600 rounded-lg">
+                {activeTab === 'prizes' && <Gift className="w-5 h-5 text-white" />}
+                {activeTab === 'branding' && <Palette className="w-5 h-5 text-white" />}
+                {activeTab === 'carousel' && <Layout className="w-5 h-5 text-white" />}
+                {activeTab === 'messages' && <Edit className="w-5 h-5 text-white" />}
+                {activeTab === 'demo' && <Monitor className="w-5 h-5 text-white" />}
+                {activeTab === 'leads' && <Users className="w-5 h-5 text-white" />}
+                {activeTab === 'config' && <Settings className="w-5 h-5 text-white" />}
+              </div>
+              <div>
+                <span className="text-white font-bold block leading-none">
+                  {activeTab === 'prizes' && 'Premios'}
+                  {activeTab === 'branding' && 'Marca'}
+                  {activeTab === 'carousel' && 'Carrusel'}
+                  {activeTab === 'messages' && 'Mensajes'}
+                  {activeTab === 'demo' && 'Demo'}
+                  {activeTab === 'leads' && 'Leads'}
+                  {activeTab === 'config' && 'Configuración'}
+                </span>
+                <span className="text-xs text-slate-400">Navegar apartados</span>
+              </div>
+            </div>
+
+            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="h-10 w-10 border-white/10 bg-white/5 hover:bg-white/10">
+                  <Menu className="h-5 w-5 text-white" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="bg-slate-900 border-l-indigo-500/20 text-white p-0 w-[280px]">
+                <div className="p-6 border-b border-white/10 mb-4">
+                  <SheetHeader className="text-left">
+                    <SheetTitle className="text-white flex items-center gap-2">
+                      <Settings className="w-5 h-5 text-indigo-500" />
+                      ADMINISTRACIÓN
+                    </SheetTitle>
+                    <SheetDescription className="text-slate-400">
+                      Selecciona una sección
+                    </SheetDescription>
+                  </SheetHeader>
+                </div>
+                
+                <div className="px-3 space-y-1">
+                  {[
+                    { id: 'prizes', label: 'Premios', icon: Gift },
+                    { id: 'branding', label: 'Marca', icon: Palette },
+                    { id: 'carousel', label: 'Carrusel', icon: Layout },
+                    { id: 'messages', label: 'Mensajes', icon: Edit },
+                    { id: 'demo', label: 'Demo', icon: Monitor },
+                    { id: 'leads', label: 'Leads', icon: Users },
+                    { id: 'config', label: 'Configuración', icon: Settings },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        activeTab === tab.id 
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
+                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? 'text-white' : 'text-slate-500'}`} />
+                      <span className="font-semibold">{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-white/10 bg-slate-900/50">
+                  <p className="text-[10px] text-center text-slate-500 uppercase tracking-widest font-black">
+                    Powered by Inédito Digital
+                  </p>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
 
         {/* Stats */}
@@ -159,34 +250,34 @@ export const AdminView: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="prizes" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 h-auto gap-2 bg-transparent p-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="hidden md:grid w-full grid-cols-7 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger value="prizes" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
-              <Gift className="w-4 h-4 mr-2 hidden sm:block" />
+              <Gift className="w-4 h-4 mr-2" />
               Premios
             </TabsTrigger>
             <TabsTrigger value="branding" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
-              <Palette className="w-4 h-4 mr-2 hidden sm:block" />
+              <Palette className="w-4 h-4 mr-2" />
               Marca
             </TabsTrigger>
             <TabsTrigger value="carousel" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
-              <Layout className="w-4 h-4 mr-2 hidden sm:block" />
+              <Layout className="w-4 h-4 mr-2" />
               Carrusel
             </TabsTrigger>
             <TabsTrigger value="messages" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
-              <Edit className="w-4 h-4 mr-2 hidden sm:block" />
+              <Edit className="w-4 h-4 mr-2" />
               Mensajes
             </TabsTrigger>
             <TabsTrigger value="demo" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
-              <Monitor className="w-4 h-4 mr-2 hidden sm:block" />
+              <Monitor className="w-4 h-4 mr-2" />
               Demo
             </TabsTrigger>
             <TabsTrigger value="leads" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
-              <Users className="w-4 h-4 mr-2 hidden sm:block" />
+              <Users className="w-4 h-4 mr-2" />
               Leads
             </TabsTrigger>
             <TabsTrigger value="config" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
-              <Settings className="w-4 h-4 mr-2 hidden sm:block" />
+              <Settings className="w-4 h-4 mr-2" />
               Config
             </TabsTrigger>
           </TabsList>
@@ -201,68 +292,111 @@ export const AdminView: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Add New Prize */}
-                <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg space-y-4">
-                  <h3 className="font-semibold">Agregar Nuevo Premio</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Nombre del Premio</Label>
-                      <Input
-                        value={newPrize.name}
-                        onChange={(e) => setNewPrize({ ...newPrize, name: e.target.value })}
-                        placeholder="Ej: 50% de descuento"
-                      />
+                {/* Add Prize Button */}
+                <Button 
+                  onClick={() => setShowAddForm(!showAddForm)} 
+                  className="w-full bg-slate-950 hover:bg-slate-900 text-white h-12 rounded-lg transition-all duration-200"
+                >
+                  <Plus className={`w-4 h-4 mr-2 transition-transform ${showAddForm ? 'rotate-45' : ''}`} />
+                  {showAddForm ? 'Cancelar' : 'Agregar Premio'}
+                </Button>
+
+                {/* Add New Prize Form */}
+                {showAddForm && (
+                  <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-6">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      <Plus className="w-5 h-5 text-indigo-500" />
+                      Nuevo Premio
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Nombre del Premio</Label>
+                        <Input
+                          value={newPrize.name}
+                          onChange={(e) => setNewPrize({ ...newPrize, name: e.target.value })}
+                          placeholder="Ej: 50% de descuento"
+                        />
+                      </div>
+                      <div>
+                        <Label>Descripción</Label>
+                        <Input
+                          value={newPrize.description}
+                          onChange={(e) => setNewPrize({ ...newPrize, description: e.target.value })}
+                          placeholder="Descripción corta"
+                        />
+                      </div>
+                      <div>
+                        <Label>Probabilidad (%)</Label>
+                        <Input
+                          type="number"
+                          value={newPrize.probability}
+                          onChange={(e) =>
+                            setNewPrize({ ...newPrize, probability: parseInt(e.target.value) })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Máximo de Veces</Label>
+                        <Input
+                          type="number"
+                          value={newPrize.maxWins}
+                          onChange={(e) =>
+                            setNewPrize({ ...newPrize, maxWins: parseInt(e.target.value) })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Color del Segmento</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={newPrize.color}
+                            onChange={(e) => setNewPrize({ ...newPrize, color: e.target.value })}
+                            className="w-12 h-10 p-1"
+                          />
+                          <Input
+                            value={newPrize.color}
+                            onChange={(e) => setNewPrize({ ...newPrize, color: e.target.value })}
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Color del Texto</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={newPrize.textColor}
+                            onChange={(e) => setNewPrize({ ...newPrize, textColor: e.target.value })}
+                            className="w-12 h-10 p-1"
+                          />
+                          <Input
+                            value={newPrize.textColor}
+                            onChange={(e) => setNewPrize({ ...newPrize, textColor: e.target.value })}
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <Label>Descripción</Label>
-                      <Input
-                        value={newPrize.description}
-                        onChange={(e) => setNewPrize({ ...newPrize, description: e.target.value })}
-                        placeholder="Descripción corta"
-                      />
-                    </div>
-                    <div>
-                      <Label>Probabilidad (%)</Label>
-                      <Input
-                        type="number"
-                        value={newPrize.probability}
-                        onChange={(e) =>
-                          setNewPrize({ ...newPrize, probability: parseInt(e.target.value) })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Máximo de Veces</Label>
-                      <Input
-                        type="number"
-                        value={newPrize.maxWins}
-                        onChange={(e) =>
-                          setNewPrize({ ...newPrize, maxWins: parseInt(e.target.value) })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Color del Segmento</Label>
-                      <Input
-                        type="color"
-                        value={newPrize.color}
-                        onChange={(e) => setNewPrize({ ...newPrize, color: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label>Color del Texto</Label>
-                      <Input
-                        type="color"
-                        value={newPrize.textColor}
-                        onChange={(e) => setNewPrize({ ...newPrize, textColor: e.target.value })}
-                      />
+                    <div className="flex justify-end gap-3 pt-4">
+                      <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          if (!newPrize.name || !newPrize.description) {
+                            alert('Por favor completa el nombre y descripción del premio');
+                            return;
+                          }
+                          handleAddPrize();
+                          setShowAddForm(false);
+                        }}
+                      >
+                        Crear Premio
+                      </Button>
                     </div>
                   </div>
-                  <Button onClick={handleAddPrize} className="w-full">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Agregar Premio
-                  </Button>
-                </div>
+                )}
 
                 {/* Prizes List */}
                 <div className="space-y-2">
@@ -288,13 +422,22 @@ export const AdminView: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mr-2">
                           <span className="text-xs text-muted-foreground sm:hidden">Activo:</span>
                           <Switch
                             checked={prize.active}
                             onCheckedChange={(checked) => updatePrize(prize.id, { active: checked })}
                           />
                         </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingPrize(prize)}
+                          className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 sm:py-2"
+                        >
+                          <Edit className="w-4 h-4" />
+                          <span className="hidden sm:ml-2 sm:inline">Editar</span>
+                        </Button>
                         <Button
                           variant="destructive"
                           size="sm"
@@ -308,12 +451,107 @@ export const AdminView: React.FC = () => {
                     </div>
                   ))}
                 </div>
+
+                {/* Edit Prize Dialog */}
+                <Dialog open={!!editingPrize} onOpenChange={(open) => !open && setEditingPrize(null)}>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Editar Premio</DialogTitle>
+                      <DialogDescription>
+                        Modifica los detalles del premio seleccionado
+                      </DialogDescription>
+                    </DialogHeader>
+                    {editingPrize && (
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Nombre</Label>
+                            <Input
+                              value={editingPrize.name}
+                              onChange={(e) => setEditingPrize({ ...editingPrize, name: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Descripción</Label>
+                            <Input
+                              value={editingPrize.description}
+                              onChange={(e) => setEditingPrize({ ...editingPrize, description: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Probabilidad (%)</Label>
+                            <Input
+                              type="number"
+                              value={editingPrize.probability}
+                              onChange={(e) => setEditingPrize({ ...editingPrize, probability: parseInt(e.target.value) || 0 })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Máximo Ganadores</Label>
+                            <Input
+                              type="number"
+                              value={editingPrize.maxWins}
+                              onChange={(e) => setEditingPrize({ ...editingPrize, maxWins: parseInt(e.target.value) || 0 })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Color de Fondo</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="color"
+                                value={editingPrize.color}
+                                onChange={(e) => setEditingPrize({ ...editingPrize, color: e.target.value })}
+                                className="w-12 h-10 p-1"
+                              />
+                              <Input
+                                value={editingPrize.color}
+                                onChange={(e) => setEditingPrize({ ...editingPrize, color: e.target.value })}
+                                className="flex-1 font-mono uppercase"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Color de Texto</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="color"
+                                value={editingPrize.textColor}
+                                onChange={(e) => setEditingPrize({ ...editingPrize, textColor: e.target.value })}
+                                className="w-12 h-10 p-1"
+                              />
+                              <Input
+                                value={editingPrize.textColor}
+                                onChange={(e) => setEditingPrize({ ...editingPrize, textColor: e.target.value })}
+                                className="flex-1 font-mono uppercase"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setEditingPrize(null)}>
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          if (editingPrize) {
+                            updatePrize(editingPrize.id, editingPrize);
+                            setEditingPrize(null);
+                          }
+                        }}
+                      >
+                        Guardar Cambios
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Branding Tab */}
-          <TabsContent value="branding" className="space-y-6">
+          <TabsContent value="branding" className="space-y-6 pb-40">
             <Card>
               <CardHeader>
                 <CardTitle>Personalización de Marca</CardTitle>
@@ -335,24 +573,26 @@ export const AdminView: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
-                  <div>
-                    <Label className="text-sm font-semibold">Nombre de la Empresa</Label>
-                    <Input
-                      value={state.brand.companyName}
-                      onChange={(e) => updateBrand({ companyName: e.target.value })}
-                      className="mt-1"
-                    />
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-semibold">Nombre de la Empresa</Label>
+                      <Input
+                        value={state.brand.companyName}
+                        onChange={(e) => updateBrand({ companyName: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold">Nombre del Sistema</Label>
+                      <Input
+                        value={state.brand.systemName}
+                        onChange={(e) => updateBrand({ systemName: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold">Nombre del Sistema</Label>
-                    <Input
-                      value={state.brand.systemName}
-                      onChange={(e) => updateBrand({ systemName: e.target.value })}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="col-span-2">
                     <Label className="text-sm font-semibold">Texto Acompañante del Logo</Label>
                     <Input
                       value={state.brand.logoText || ''}
@@ -366,25 +606,27 @@ export const AdminView: React.FC = () => {
                   </div>
                   <div className="col-span-2">
                     <Label>Logotipo de la Marca</Label>
-                    <div className="mt-2 flex items-center gap-4">
-                      {state.brand.logoUrl && (
-                        <div className="relative group">
-                          <img 
-                            src={state.brand.logoUrl} 
-                            alt="Logo preview" 
-                            className="h-16 w-16 object-contain border rounded p-1 bg-white" 
-                          />
-                          <button
-                            onClick={() => updateBrand({ logoUrl: '' })}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <Input
+                      <div className="mt-2 flex flex-col sm:flex-row items-center sm:items-end gap-4">
+                        {state.brand.logoUrl && (
+                          <div className="relative group shrink-0">
+                            <img 
+                              src={state.brand.logoUrl} 
+                              alt="Logo preview" 
+                              className="h-32 w-auto max-w-[200px] object-contain border rounded-xl p-2 bg-white shadow-inner" 
+                            />
+                            <button
+                              onClick={() => updateBrand({ logoUrl: '' })}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        <div className="w-full flex-1">
+                        <input
                           type="file"
+                          ref={logoInputRef}
+                          className="hidden"
                           accept="image/*"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
@@ -396,55 +638,178 @@ export const AdminView: React.FC = () => {
                               reader.readAsDataURL(file);
                             }
                           }}
-                          className="cursor-pointer"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          onClick={() => logoInputRef.current?.click()}
+                          className="w-full bg-slate-800 text-white border-white/10 hover:bg-slate-700 h-12 gap-2 shadow-sm"
+                        >
+                          <Upload className="w-4 h-4 text-indigo-400" />
+                          Seleccionar Archivo
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2">
                           Sugerido: PNG o WebP con fondo transparente
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                     <div>
                       <Label className="text-sm font-semibold">Color Primario</Label>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-3 mt-1.5">
                         <Input
                           type="color"
                           value={state.brand.primaryColor}
                           onChange={(e) => updateBrand({ primaryColor: e.target.value })}
-                          className="w-12 h-10 p-1"
+                          className="w-16 h-12 p-1 cursor-pointer shrink-0"
                         />
-                        <span className="text-xs font-mono uppercase bg-slate-100 p-1 rounded border flex-1 text-center">
+                        <span className="text-xs font-mono uppercase bg-slate-100 p-2 rounded-lg border flex-1 text-center shadow-sm">
                           {state.brand.primaryColor}
                         </span>
                       </div>
                     </div>
                     <div>
                       <Label className="text-sm font-semibold">Color Secundario</Label>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-3 mt-1.5">
                         <Input
                           type="color"
                           value={state.brand.secondaryColor}
                           onChange={(e) => updateBrand({ secondaryColor: e.target.value })}
-                          className="w-12 h-10 p-1"
+                          className="w-16 h-12 p-1 cursor-pointer shrink-0"
                         />
-                        <span className="text-xs font-mono uppercase bg-slate-100 p-1 rounded border flex-1 text-center">
+                        <span className="text-xs font-mono uppercase bg-slate-100 p-2 rounded-lg border flex-1 text-center shadow-sm">
                           {state.brand.secondaryColor}
                         </span>
                       </div>
                     </div>
                     <div>
                       <Label className="text-sm font-semibold">Color de Fondo</Label>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-3 mt-1.5">
                         <Input
                           type="color"
                           value={state.brand.backgroundColor}
                           onChange={(e) => updateBrand({ backgroundColor: e.target.value })}
-                          className="w-12 h-10 p-1"
+                          className="w-16 h-12 p-1 cursor-pointer shrink-0"
                         />
-                        <span className="text-xs font-mono uppercase bg-slate-100 p-1 rounded border flex-1 text-center">
+                        <span className="text-xs font-mono uppercase bg-slate-100 p-2 rounded-lg border flex-1 text-center shadow-sm">
                           {state.brand.backgroundColor}
                         </span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold">Color del Borde (Ruleta)</Label>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <Input
+                          type="color"
+                          value={state.brand.wheelBorderColor || '#1f2937'}
+                          onChange={(e) => updateBrand({ wheelBorderColor: e.target.value })}
+                          className="w-16 h-12 p-1 cursor-pointer shrink-0"
+                        />
+                        <span className="text-xs font-mono uppercase bg-slate-100 p-2 rounded-lg border flex-1 text-center shadow-sm">
+                          {state.brand.wheelBorderColor || '#1F2937'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold">Color de Fondo (Formularios)</Label>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <Input
+                          type="color"
+                          value={state.brand.cardBackgroundColor?.startsWith('rgba') ? '#000000' : state.brand.cardBackgroundColor}
+                          onChange={(e) => updateBrand({ cardBackgroundColor: e.target.value })}
+                          className="w-16 h-12 p-1 cursor-pointer shrink-0"
+                        />
+                        <span className="text-xs font-mono uppercase bg-slate-100 p-2 rounded-lg border flex-1 text-center shadow-sm">
+                          {state.brand.cardBackgroundColor}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold">Color de Texto (Gral.)</Label>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <Input
+                          type="color"
+                          value={state.brand.textColor || '#ffffff'}
+                          onChange={(e) => updateBrand({ textColor: e.target.value })}
+                          className="w-16 h-12 p-1 cursor-pointer shrink-0"
+                        />
+                        <span className="text-xs font-mono uppercase bg-slate-100 p-2 rounded-lg border flex-1 text-center shadow-sm">
+                          {state.brand.textColor || '#FFFFFF'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-4 text-indigo-400">Video de Fondo (Opcional)</h3>
+                  <div className="space-y-4">
+                    <p className="text-sm text-slate-400 bg-slate-800/50 p-3 rounded-lg border border-white/10">
+                      <span className="text-amber-400 font-bold">Requisitos:</span> Peso menor a <span className="text-white">4MB</span>, resolución <span className="text-white">1920x1080</span> y duración máxima de <span className="text-white">15s</span>.
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      {state.brand.backgroundVideoUrl && (
+                        <div className="relative group shrink-0">
+                          <video 
+                            src={state.brand.backgroundVideoUrl} 
+                            className="h-32 w-48 object-cover border rounded-xl bg-black" 
+                            muted 
+                            loop 
+                            autoPlay 
+                          />
+                          <button
+                            onClick={() => updateBrand({ backgroundVideoUrl: '' })}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                      <div className="w-full flex-1">
+                        <input
+                          type="file"
+                          ref={bgVideoInputRef}
+                          className="hidden"
+                          accept="video/mp4,video/webm"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+
+                            // 4MB Limit
+                            if (file.size > 4 * 1024 * 1024) {
+                              alert("El video supera el límite de 4MB.");
+                              return;
+                            }
+
+                            const video = document.createElement('video');
+                            video.preload = 'metadata';
+                            video.onloadedmetadata = () => {
+                              window.URL.revokeObjectURL(video.src);
+                              if (video.duration > 15.5) {
+                                alert("El video supera los 15 segundos de duración.");
+                                return;
+                              }
+                              
+                              const reader = new FileReader();
+                              reader.onload = (re) => {
+                                updateBrand({ backgroundVideoUrl: re.target?.result as string });
+                              };
+                              reader.readAsDataURL(file);
+                            };
+                            video.src = URL.createObjectURL(file);
+                          }}
+                        />
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          onClick={() => bgVideoInputRef.current?.click()}
+                          className="w-full bg-slate-800 text-white border-white/10 hover:bg-slate-700 h-12 gap-2 shadow-sm"
+                        >
+                          <Video className="w-4 h-4 text-indigo-400" />
+                          {state.brand.backgroundVideoUrl ? 'Cambiar Video de Fondo' : 'Subir Video de Fondo'}
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -455,13 +820,13 @@ export const AdminView: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="col-span-2">
                       <Label>Logotipo Central</Label>
-                      <div className="mt-2 flex items-center gap-4">
+                      <div className="mt-2 flex flex-col sm:flex-row items-center sm:items-end gap-4">
                         {state.brand.centerLogoUrl && (
-                          <div className="relative group">
+                          <div className="relative group shrink-0">
                             <img 
                               src={state.brand.centerLogoUrl} 
                               alt="Center logo preview" 
-                              className="h-16 w-16 object-contain border rounded p-1 bg-white" 
+                              className="h-32 w-auto max-w-[200px] object-contain border rounded-xl p-2 bg-white shadow-inner" 
                             />
                             <button
                               onClick={() => updateBrand({ centerLogoUrl: '' })}
@@ -471,9 +836,11 @@ export const AdminView: React.FC = () => {
                             </button>
                           </div>
                         )}
-                        <div className="flex-1">
-                          <Input
+                        <div className="w-full flex-1">
+                          <input
                             type="file"
+                            ref={centerLogoInputRef}
+                            className="hidden"
                             accept="image/*"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
@@ -485,9 +852,17 @@ export const AdminView: React.FC = () => {
                                 reader.readAsDataURL(file);
                               }
                             }}
-                            className="cursor-pointer"
                           />
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <Button 
+                            type="button"
+                            variant="outline" 
+                            onClick={() => centerLogoInputRef.current?.click()}
+                            className="w-full bg-slate-800 text-white border-white/10 hover:bg-slate-700 h-12 gap-2 shadow-sm"
+                          >
+                            <Upload className="w-4 h-4 text-indigo-400" />
+                            Seleccionar Archivo
+                          </Button>
+                          <p className="text-xs text-muted-foreground mt-2">
                             Sugerido: Imagen cuadrada con fondo transparente
                           </p>
                         </div>
@@ -959,6 +1334,18 @@ export const AdminView: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
+                      <Label>Mostrar Premios en Ruleta</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Muestra u oculta los nombres de los premios en los segmentos de la ruleta
+                      </p>
+                    </div>
+                    <Switch
+                      checked={state.gameConfig.showPrizes}
+                      onCheckedChange={(checked) => updateGameConfig({ showPrizes: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
                       <Label>Registro Obligatorio</Label>
                       <p className="text-sm text-muted-foreground">
                         Requiere registro antes de jugar
@@ -996,6 +1383,69 @@ export const AdminView: React.FC = () => {
                       checked={state.gameConfig.enableAnimations}
                       onCheckedChange={(checked) => updateGameConfig({ enableAnimations: checked })}
                     />
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Label className="text-indigo-400 font-bold mb-2 block uppercase text-xs tracking-widest">Redirección Post-Premio</Label>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Si configuras una URL, el usuario será redirigido automáticamente a esa página después de ver su premio. Déjalo vacío para volver al inicio de la ruleta.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                      <div className="space-y-2">
+                        <Label>URL de destino</Label>
+                        <Input
+                          type="url"
+                          placeholder="https://tutienda.com/oferta"
+                          value={state.gameConfig.redirectUrl || ''}
+                          onChange={(e) => updateGameConfig({ redirectUrl: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Tiempo de espera: <span className="font-mono text-indigo-400">{state.gameConfig.redirectDelay ?? 5}s</span></Label>
+                        <Slider
+                          value={[state.gameConfig.redirectDelay ?? 5]}
+                          onValueChange={(v) => updateGameConfig({ redirectDelay: v[0] })}
+                          min={2}
+                          max={30}
+                          step={1}
+                          className="flex-1"
+                        />
+                        <p className="text-xs text-muted-foreground">Segundos que se muestra el premio antes de redirigir</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Label className="text-amber-500 font-bold mb-2 block uppercase text-xs tracking-widest">Seguridad del Panel</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                      <div className="space-y-2">
+                        <Label>Cambiar Contraseña de Administrador</Label>
+                        <div className="relative">
+                          <Input
+                            type={showConfigPassword ? "text" : "password"}
+                            placeholder="Nueva contraseña"
+                            defaultValue={state.gameConfig.adminPassword}
+                            onBlur={(e) => {
+                              if (e.target.value.trim().length > 0) {
+                                updateGameConfig({ adminPassword: e.target.value.trim() });
+                                alert('Contraseña actualizada correctamente');
+                              }
+                            }}
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfigPassword(!showConfigPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                          >
+                            {showConfigPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground pb-2">
+                        Esta contraseña es necesaria para acceder a este panel. Asegúrate de recordarla.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
