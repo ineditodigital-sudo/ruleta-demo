@@ -38,6 +38,10 @@ export interface BrandConfig {
   cardBackgroundColor?: string;
   backgroundVideoUrl?: string;
   textColor?: string;
+  menuWheelColor?: string;
+  menuRecruitmentColor?: string;
+  menuSocialColor?: string;
+  menuProvidersColor?: string;
 }
 
 export interface Messages {
@@ -46,6 +50,9 @@ export interface Messages {
   congratulations: string;
   prizeMessage: string;
   termsText: string;
+  menuWelcome?: string;
+  menuSocialTitle?: string;
+  menuSocialTagline?: string;
 }
 
 export interface GameConfig {

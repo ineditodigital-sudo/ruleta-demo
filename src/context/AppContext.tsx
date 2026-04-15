@@ -41,6 +41,10 @@ const defaultState: AppState = {
     cardBackgroundColor: 'rgba(0, 0, 0, 0.7)',
     backgroundVideoUrl: '',
     textColor: '#ffffff',
+    menuWheelColor: '#7c3aed',
+    menuRecruitmentColor: '#10b981',
+    menuSocialColor: '#f59e0b',
+    menuProvidersColor: '#6366f1',
   },
   prizes: [
     {
@@ -106,6 +110,9 @@ const defaultState: AppState = {
     congratulations: '¡Felicidades!',
     prizeMessage: 'Un asesor se pondrá en contacto contigo pronto',
     termsText: 'Acepto los términos y condiciones y el aviso de privacidad',
+    menuWelcome: 'Bienvenido a la Experiencia',
+    menuSocialTitle: 'REDES SOCIALES',
+    menuSocialTagline: 'Conéctate con nosotros',
   },
   gameConfig: {
     dailyLimit: 100,
@@ -156,6 +163,24 @@ function applyMigrations(parsed: AppState): AppState {
     parsed.gameConfig.redirectUrl = defaultState.gameConfig.redirectUrl;
   if (parsed.gameConfig && parsed.gameConfig.redirectDelay === undefined)
     parsed.gameConfig.redirectDelay = defaultState.gameConfig.redirectDelay;
+  
+  // Menu customization migrations
+  if (parsed.brand && parsed.brand.menuWheelColor === undefined)
+    parsed.brand.menuWheelColor = defaultState.brand.menuWheelColor;
+  if (parsed.brand && parsed.brand.menuRecruitmentColor === undefined)
+    parsed.brand.menuRecruitmentColor = defaultState.brand.menuRecruitmentColor;
+  if (parsed.brand && parsed.brand.menuSocialColor === undefined)
+    parsed.brand.menuSocialColor = defaultState.brand.menuSocialColor;
+  if (parsed.brand && parsed.brand.menuProvidersColor === undefined)
+    parsed.brand.menuProvidersColor = defaultState.brand.menuProvidersColor;
+  
+  if (parsed.messages && parsed.messages.menuWelcome === undefined)
+    parsed.messages.menuWelcome = defaultState.messages.menuWelcome;
+  if (parsed.messages && parsed.messages.menuSocialTitle === undefined)
+    parsed.messages.menuSocialTitle = defaultState.messages.menuSocialTitle;
+  if (parsed.messages && parsed.messages.menuSocialTagline === undefined)
+    parsed.messages.menuSocialTagline = defaultState.messages.menuSocialTagline;
+
   return parsed;
 }
 

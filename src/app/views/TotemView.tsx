@@ -6,13 +6,102 @@ import { Input } from '@/app/components/ui/input';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Label } from '@/app/components/ui/label';
 import { Participant, Prize } from '@/types';
-import { Sparkles, CheckCircle, Mail, Phone, User, ArrowLeft, Target } from 'lucide-react';
+import { Sparkles, CheckCircle, Mail, Phone, User, ArrowLeft, ArrowRight, Target, Facebook, Instagram, Linkedin } from 'lucide-react';
 
-type Step = 'splash' | 'registration' | 'wheel' | 'result';
+type Step = 'splash' | 'registration' | 'menu' | 'socialMenu' | 'qrView' | 'wheel' | 'result';
 
 interface TotemViewProps {
   isDemoMode?: boolean;
 }
+
+const MenuButton: React.FC<{ 
+  onClick: () => void; 
+  icon: React.ReactNode; 
+  label: string; 
+  color: string;
+  disabled?: boolean;
+  textColor?: string;
+}> = ({ onClick, icon, label, color, disabled, textColor = '#ffffff' }) => (
+  <motion.button
+    whileHover={disabled ? {} : { scale: 1.02, y: -4 }}
+    whileTap={disabled ? {} : { scale: 0.98 }}
+    onClick={onClick}
+    disabled={disabled}
+    className={`
+      relative w-full overflow-hidden rounded-[2rem] p-4 sm:p-6 flex items-center gap-6 
+      transition-all duration-500 group
+      ${disabled ? 'opacity-40 grayscale cursor-not-allowed' : 'cursor-pointer'}
+      backdrop-blur-xl border border-white/10
+    `}
+    style={{ 
+      background: `linear-gradient(135deg, ${color}22 0%, ${color}11 100%)`,
+    }}
+  >
+    <div 
+      className="p-3 sm:p-5 rounded-2xl relative z-10 shadow-2xl transition-transform group-hover:scale-110 duration-500"
+      style={{ 
+        background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+        boxShadow: `0 10px 30px -5px ${color}66`
+      }}
+    >
+      <div className="text-white w-5 h-5 sm:w-8 sm:h-8">
+        {icon}
+      </div>
+    </div>
+    
+    <div className="flex flex-col items-start gap-1">
+      <span 
+        className="font-black text-xs sm:text-lg uppercase tracking-tight leading-none"
+        style={{ color: textColor }}
+      >
+        {label}
+      </span>
+      <span 
+        className="text-[8px] sm:text-xs font-black uppercase tracking-[0.2em]"
+        style={{ color: textColor + '66' }}
+      >
+        {disabled ? 'No disponible' : 'Click para abrir'}
+      </span>
+    </div>
+
+    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+      <ArrowRight className="w-4 h-4 sm:w-6 sm:h-6" style={{ color: textColor }} />
+    </div>
+  </motion.button>
+);
+
+const SocialButton: React.FC<{ 
+  onClick: () => void; 
+  icon: React.ReactNode;
+  label: string; 
+  color: string;
+  textColor?: string;
+}> = ({ onClick, icon, label, color, textColor = '#ffffff' }) => {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02, x: 10 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="flex items-center gap-5 p-4 sm:p-6 rounded-3xl border-2 border-white/10 bg-white/5 hover:bg-white/10 transition-all group overflow-hidden relative w-full"
+    >
+      <div 
+        className="shrink-0 w-12 h-12 flex items-center justify-center rounded-xl text-white shadow-lg relative z-10"
+        style={{ background: color }}
+      >
+        {React.cloneElement(icon as React.ReactElement, { className: "w-6 h-6" })}
+      </div>
+      <span 
+        className="font-black text-base sm:text-xl tracking-wider relative z-10 uppercase"
+        style={{ color: textColor }}
+      >
+        {label}
+      </span>
+      <div className="ml-auto w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+        <ArrowLeft className="w-5 h-5 rotate-180 transition-all" style={{ color: textColor }} />
+      </div>
+    </motion.button>
+  );
+};
 
 export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
   const { state, addParticipant, updatePrize } = useApp();
@@ -25,6 +114,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
   });
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [activeQr, setActiveQr] = useState<{ title: string; image: string } | null>(null);
 
   const cardBg = state.brand.cardBackgroundColor || 'rgba(0, 0, 0, 0.7)';
   const finalCardBg = cardBg.startsWith('#') ? `${cardBg}cc` : cardBg;
@@ -36,7 +126,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
         if (state.gameConfig.requireRegistration) {
           setStep('registration');
         } else {
-          setStep('wheel');
+          setStep('menu');
         }
       }, 2500);
       return () => clearTimeout(timer);
@@ -97,8 +187,6 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
       handleReset();
     }
   }, [step]);
-
-  const bgGradient = `linear-gradient(135deg, ${state.brand.backgroundColor} 0%, ${state.brand.primaryColor} 100%)`;
 
   return (
     <div
@@ -249,6 +337,255 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
 
               </motion.div>
             </motion.div>
+          </motion.div>
+        )}
+
+        {/* Home Menu */}
+        {step === 'menu' && (
+          <motion.div
+            key="menu"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full h-full flex items-center justify-center p-4 sm:p-8"
+          >
+            {/* Background Decorative Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <motion.div 
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.5, 0.3],
+                  rotate: [0, 90, 0]
+                }}
+                transition={{ duration: 10, repeat: Infinity }}
+                className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[120px]"
+                style={{ backgroundColor: state.brand.primaryColor }}
+              />
+              <motion.div 
+                animate={{ 
+                  scale: [1.2, 1, 1.2],
+                  opacity: [0.2, 0.4, 0.2],
+                  rotate: [0, -90, 0]
+                }}
+                transition={{ duration: 12, repeat: Infinity }}
+                className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full blur-[120px]"
+                style={{ backgroundColor: state.brand.secondaryColor }}
+              />
+            </div>
+
+            <div 
+              className="rounded-[2.5rem] sm:rounded-[3.5rem] p-6 sm:p-12 shadow-[0_40px_100px_rgba(0,0,0,0.8)] border-2 border-white/20 w-full max-w-3xl relative z-10 overflow-hidden backdrop-blur-[40px]"
+              style={{ backgroundColor: state.brand.cardBackgroundColor || 'rgba(0, 0, 0, 0.4)' }}
+            >
+              <div className="flex flex-col items-center gap-10">
+                <motion.div 
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="flex flex-col items-center gap-6"
+                >
+                  <div className="relative p-2">
+                    <div className="absolute inset-0 blur-2xl opacity-30 bg-white rounded-full" />
+                    <img src={state.brand.centerLogoUrl || state.brand.logoUrl} alt="Logo" className="h-20 sm:h-28 object-contain relative z-10 drop-shadow-2xl" />
+                  </div>
+                  <div className="text-center">
+                    <span 
+                      className="font-black text-[10px] sm:text-xs tracking-[0.4em] uppercase mb-2 block"
+                      style={{ color: (state.brand.textColor || '#ffffff') + '66' }}
+                    >
+                      {state.messages.menuWelcome || 'Bienvenido a la Experiencia'}
+                    </span>
+                    <h2 
+                      className="text-3xl sm:text-5xl font-black uppercase tracking-tighter leading-none drop-shadow-xl"
+                      style={{ color: state.brand.textColor || '#ffffff' }}
+                    >
+                      {state.brand.companyName}
+                    </h2>
+                  </div>
+                </motion.div>
+
+                <div className="grid grid-cols-1 gap-4 sm:gap-6 w-full max-w-2xl">
+                  <MenuButton 
+                    onClick={() => setStep('wheel')}
+                    icon={<Target />}
+                    label="RULETA DE PREMIOS"
+                    color={state.brand.menuWheelColor || state.brand.primaryColor}
+                    textColor={state.brand.textColor}
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <MenuButton 
+                      onClick={() => {
+                        setActiveQr({ title: 'RECLUTAMIENTO', image: '/qr/QR-RECLUTAMIENTO-AUMOVO-HD@2x.png' });
+                        setStep('qrView');
+                      }}
+                      icon={<User />}
+                      label="RECLUTAMIENTO"
+                      color={state.brand.menuRecruitmentColor || "#10b981"}
+                      textColor={state.brand.textColor}
+                    />
+                    <MenuButton 
+                      onClick={() => setStep('socialMenu')}
+                      icon={<Sparkles />}
+                      label="REDES SOCIALES"
+                      color={state.brand.menuSocialColor || "#f59e0b"}
+                      textColor={state.brand.textColor}
+                    />
+                  </div>
+                  <MenuButton 
+                    onClick={() => {
+                      setActiveQr({ title: 'PROVEEDORES', image: '/qr/qr-proveedores.png' });
+                      setStep('qrView');
+                    }}
+                    icon={<Sparkles />}
+                    label="PROVEEDORES"
+                    color={state.brand.menuProvidersColor || "#6366f1"}
+                    disabled={true}
+                    textColor={state.brand.textColor}
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Social Media Menu */}
+        {step === 'socialMenu' && (
+          <motion.div
+            key="socialMenu"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            className="w-full h-full flex items-center justify-center p-4 sm:p-8"
+          >
+            <div 
+              className="rounded-[2.5rem] p-6 sm:p-8 shadow-[0_40px_100px_rgba(0,0,0,0.8)] border-2 border-white/20 w-full max-w-2xl relative z-10 backdrop-blur-3xl"
+              style={{ backgroundColor: state.brand.cardBackgroundColor || 'rgba(0, 0, 0, 0.4)' }}
+            >
+              
+              <div className="flex flex-col items-center gap-6">
+                <header className="text-center">
+                  <span 
+                    className="font-black text-[10px] tracking-[0.4em] uppercase mb-1 block"
+                    style={{ color: (state.brand.textColor || '#ffffff') + '66' }}
+                  >
+                    {state.messages.menuSocialTagline || 'Conéctate con nosotros'}
+                  </span>
+                  <h2 
+                    className="text-2xl sm:text-4xl font-black uppercase tracking-tighter"
+                    style={{ color: state.brand.textColor || '#ffffff' }}
+                  >
+                    {state.messages.menuSocialTitle || 'REDES SOCIALES'}
+                  </h2>
+                </header>
+                
+                <div className="flex flex-col gap-6 w-full">
+                  {/* Facebook QR Block */}
+                  <div className="flex flex-col items-center">
+                    <span 
+                      className="text-black font-black uppercase tracking-[0.2em] mb-2 text-sm"
+                      style={{ color: '#000000', display: 'block', visibility: 'visible', opacity: 1 }}
+                    >
+                      Facebook
+                    </span>
+                    <div className="bg-white p-4 rounded-2xl shadow-lg border border-black/5">
+                      <img src="/qr/QR-FACEBOOK-AUMOVIO.png" alt="Facebook QR" className="w-[116px] h-[116px] object-contain" />
+                    </div>
+                  </div>
+
+                  {/* Instagram QR Block */}
+                  <div className="flex flex-col items-center">
+                    <span 
+                      className="text-black font-black uppercase tracking-[0.2em] mb-2 text-sm"
+                      style={{ color: '#000000', display: 'block', visibility: 'visible', opacity: 1 }}
+                    >
+                      Instagram
+                    </span>
+                    <div className="bg-white p-4 rounded-2xl shadow-lg border border-black/5">
+                      <img src="/qr/QR-INSTAGRAM-AUMOVIO.png" alt="Instagram QR" className="w-[116px] h-[116px] object-contain" />
+                    </div>
+                  </div>
+
+                  {/* LinkedIn QR Block */}
+                  <div className="flex flex-col items-center">
+                    <span 
+                      className="text-black font-black uppercase tracking-[0.2em] mb-2 text-sm"
+                      style={{ color: '#000000', display: 'block', visibility: 'visible', opacity: 1 }}
+                    >
+                      LinkedIn
+                    </span>
+                    <div className="bg-white p-4 rounded-2xl shadow-lg border border-black/5">
+                      <img src="/qr/QR-LINKEDIN-AUMOVIO.png" alt="LinkedIn QR" className="w-[116px] h-[116px] object-contain" />
+                    </div>
+                  </div>
+                </div>
+
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setStep('menu')} 
+                  className="mt-6 flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest px-12 py-5 rounded-[1.5rem] shadow-xl text-white w-full transition-all shrink-0"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${state.brand.primaryColor} 0%, ${state.brand.secondaryColor || state.brand.primaryColor} 100%)`,
+                  }}
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Volver al Menú
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* QR Viewer */}
+        {step === 'qrView' && activeQr && (
+          <motion.div
+            key="qrView"
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            className="w-full h-full flex flex-col items-center justify-center p-6 relative z-[100] bg-black/90 backdrop-blur-xl"
+          >
+
+
+            <div className="flex flex-col items-center gap-8 max-w-lg w-full">
+              <h2 className="text-4xl sm:text-6xl font-black text-white text-center uppercase tracking-tighter drop-shadow-2xl">
+                {activeQr.label || activeQr.title}
+              </h2>
+              
+              <div className="bg-white p-8 rounded-[3rem] shadow-[0_0_100px_rgba(255,255,255,0.2)] relative group">
+                <img 
+                  src={activeQr.image} 
+                  alt={activeQr.title} 
+                  className="w-64 h-64 sm:w-80 sm:h-80 object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://placehold.co/400x400/white/black?text=QR+" + activeQr.title;
+                  }}
+                />
+                {activeQr.title === 'PROVEEDORES' && (
+                  <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center rounded-[3rem] p-4 text-center">
+                    <p className="text-black font-black text-2xl uppercase">Próximamente</p>
+                    <p className="text-black/60 font-bold mt-2">QR de Proveedores en desarrollo</p>
+                  </div>
+                )}
+              </div>
+              
+              <p className="text-white/60 text-lg font-bold text-center animate-pulse">
+                Escanea el código con tu celular
+              </p>
+
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => activeQr.title === 'RECLUTAMIENTO' || activeQr.title === 'PROVEEDORES' ? setStep('menu') : setStep('socialMenu')} 
+                className="mt-8 flex items-center justify-center gap-3 font-black text-lg uppercase tracking-widest px-12 py-5 rounded-[2rem] shadow-2xl text-white w-full max-w-[320px] transition-all"
+                style={{ 
+                  background: `linear-gradient(135deg, ${state.brand.primaryColor} 0%, ${state.brand.secondaryColor || state.brand.primaryColor} 100%)`,
+                }}
+              >
+                <ArrowLeft className="w-6 h-6" />
+                Regresar
+              </motion.button>
+            </div>
           </motion.div>
         )}
 
@@ -412,12 +749,12 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
             exit={{ opacity: 0, scale: 0.9 }}
             className="flex flex-col items-center justify-center w-full h-full relative"
           >
-            {/* PrizeWheel handles all its own UI including logo, banner, arrow */}
             <PrizeWheel
               prizes={state.prizes}
               onSpinComplete={handleSpinComplete}
               spinDuration={state.gameConfig.spinDuration}
               isDemoMode={isDemoMode}
+              onBack={() => setStep('menu')}
             />
           </motion.div>
         )}

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Prize } from '@/types';
 import { useApp } from '@/context/AppContext';
-import { ChevronDown, Monitor } from 'lucide-react';
+import { ChevronDown, Monitor, ArrowLeft } from 'lucide-react';
 import { LogoCarousel } from './LogoCarousel';
 
 interface PrizeWheelProps {
@@ -11,6 +11,7 @@ interface PrizeWheelProps {
   spinDuration?: number;
   disabled?: boolean;
   isDemoMode?: boolean;
+  onBack?: () => void;
 }
 
 export const PrizeWheel: React.FC<PrizeWheelProps> = ({
@@ -19,6 +20,7 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
   spinDuration = 5000,
   disabled = false,
   isDemoMode = false,
+  onBack,
 }) => {
   const { state } = useApp();
   const [isSpinning, setIsSpinning] = useState(false);
@@ -73,9 +75,22 @@ export const PrizeWheel: React.FC<PrizeWheelProps> = ({
   const segmentAngle = 360 / activePrizes.length;
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-full h-full px-6 py-2 md:px-10 overflow-hidden">
+    <div className="relative flex flex-col items-center justify-center w-full h-full px-6 py-2 md:px-10">
       {/* Main container with all visual elements */}
       <div className="relative flex flex-col items-center justify-center w-full max-w-2xl gap-2 sm:gap-1 md:gap-2">
+        {/* Back Button for Wheel - Brand Gradient Design */}
+        {!isSpinning && onBack && (
+          <button 
+            onClick={onBack} 
+            className="absolute -top-12 sm:-top-4 left-0 sm:-left-40 lg:-left-48 z-[150] flex items-center gap-2 sm:gap-3 font-black text-xs sm:text-sm uppercase tracking-widest hover:scale-105 transition-all px-6 py-3 rounded-full shadow-2xl text-white border border-white/20 whitespace-nowrap"
+            style={{ 
+              background: `linear-gradient(135deg, ${state.brand.primaryColor} 0%, ${state.brand.secondaryColor || state.brand.primaryColor} 100%)`,
+            }}
+          >
+            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            Regresar
+          </button>
+        )}
         
         {/* Logo at top - always show */}
         <motion.div

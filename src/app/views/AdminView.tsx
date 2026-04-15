@@ -214,37 +214,46 @@ export const AdminView: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Participantes Totales</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2 sm:p-6 sm:pb-2">
+              <CardTitle className="text-[10px] sm:text-sm font-medium leading-tight">
+                <span className="sm:hidden">Totales</span>
+                <span className="hidden sm:inline">Participantes Totales</span>
+              </CardTitle>
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalParticipants}</div>
+            <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{totalParticipants}</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Participantes Hoy</CardTitle>
-              <BarChart className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2 sm:p-6 sm:pb-2">
+              <CardTitle className="text-[10px] sm:text-sm font-medium leading-tight">
+                <span className="sm:hidden">Hoy</span>
+                <span className="hidden sm:inline">Participantes Hoy</span>
+              </CardTitle>
+              <BarChart className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{todayParticipants}</div>
-              <p className="text-xs text-muted-foreground">
-                de {state.gameConfig.dailyLimit} límite diario
+            <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{todayParticipants}</div>
+              <p className="text-[8px] sm:text-xs text-muted-foreground truncate">
+                lim. {state.gameConfig.dailyLimit}
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Premios Entregados</CardTitle>
-              <Gift className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2 sm:p-6 sm:pb-2">
+              <CardTitle className="text-[10px] sm:text-sm font-medium leading-tight">
+                <span className="sm:hidden">Premios</span>
+                <span className="hidden sm:inline">Premios Entregados</span>
+              </CardTitle>
+              <Gift className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{prizesGiven}</div>
+            <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{prizesGiven}</div>
             </CardContent>
           </Card>
         </div>
@@ -573,38 +582,39 @@ export const AdminView: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">
+                    <div className="space-y-2">
                       <Label className="text-sm font-semibold">Nombre de la Empresa</Label>
                       <Input
                         value={state.brand.companyName}
                         onChange={(e) => updateBrand({ companyName: e.target.value })}
-                        className="mt-1"
+                        placeholder="Ej: Mi Empresa S.A."
                       />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label className="text-sm font-semibold">Nombre del Sistema</Label>
                       <Input
                         value={state.brand.systemName}
                         onChange={(e) => updateBrand({ systemName: e.target.value })}
-                        className="mt-1"
+                        placeholder="Ej: Ruleta de Premios v2"
                       />
                     </div>
                   </div>
-                  <div>
+                  
+                  <div className="space-y-2 border-t pt-4">
                     <Label className="text-sm font-semibold">Texto Acompañante del Logo</Label>
                     <Input
                       value={state.brand.logoText || ''}
                       onChange={(e) => updateBrand({ logoText: e.target.value })}
-                      placeholder="Ej: Nombre de tu marca"
-                      className="mt-1"
+                      placeholder="Ej: El nombre que aparecerá junto a tu logo"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground opacity-60">
                       Este texto aparecerá junto al logo en el preloader, formulario y resultados.
                     </p>
                   </div>
-                  <div className="col-span-2">
+                </div>
+                  <div className="space-y-2 border-t pt-4">
                     <Label>Logotipo de la Marca</Label>
                       <div className="mt-2 flex flex-col sm:flex-row items-center sm:items-end gap-4">
                         {state.brand.logoUrl && (
@@ -736,6 +746,68 @@ export const AdminView: React.FC = () => {
                         />
                         <span className="text-xs font-mono uppercase bg-slate-100 p-2 rounded-lg border flex-1 text-center shadow-sm">
                           {state.brand.textColor || '#FFFFFF'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                {/* Menu Customization Section */}
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-4 text-indigo-400 mt-6 uppercase text-xs tracking-[0.2em]">Configuración de Colores del Menú</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Ruleta</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="color"
+                          value={state.brand.menuWheelColor || state.brand.primaryColor}
+                          onChange={(e) => updateBrand({ menuWheelColor: e.target.value })}
+                          className="w-10 h-10 p-1"
+                        />
+                        <span className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-white/10 flex-1 text-center truncate shadow-sm">
+                          {state.brand.menuWheelColor || state.brand.primaryColor}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Recluta.</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="color"
+                          value={state.brand.menuRecruitmentColor || '#10b981'}
+                          onChange={(e) => updateBrand({ menuRecruitmentColor: e.target.value })}
+                          className="w-10 h-10 p-1"
+                        />
+                        <span className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-white/10 flex-1 text-center truncate shadow-sm">
+                          {state.brand.menuRecruitmentColor || '#10B981'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Redes</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="color"
+                          value={state.brand.menuSocialColor || '#f59e0b'}
+                          onChange={(e) => updateBrand({ menuSocialColor: e.target.value })}
+                          className="w-10 h-10 p-1"
+                        />
+                        <span className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-white/10 flex-1 text-center truncate shadow-sm">
+                          {state.brand.menuSocialColor || '#F59E0B'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Prov.</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="color"
+                          value={state.brand.menuProvidersColor || '#6366f1'}
+                          onChange={(e) => updateBrand({ menuProvidersColor: e.target.value })}
+                          className="w-10 h-10 p-1"
+                        />
+                        <span className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-white/10 flex-1 text-center truncate shadow-sm">
+                          {state.brand.menuProvidersColor || '#6366F1'}
                         </span>
                       </div>
                     </div>
@@ -968,6 +1040,35 @@ export const AdminView: React.FC = () => {
                     onChange={(e) => updateMessages({ termsText: e.target.value })}
                     rows={3}
                   />
+                </div>
+                <div className="pt-4 border-t space-y-4">
+                  <h3 className="font-semibold text-indigo-400 uppercase text-xs tracking-widest">Textos del Menú Inicial</h3>
+                  <div>
+                    <Label>Bienvenida Menú (Tagline)</Label>
+                    <Input
+                      value={state.messages.menuWelcome || ''}
+                      onChange={(e) => updateMessages({ menuWelcome: e.target.value })}
+                      placeholder="Ej: Bienvenido a la Experiencia"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Título Redes Sociales</Label>
+                      <Input
+                        value={state.messages.menuSocialTitle || ''}
+                        onChange={(e) => updateMessages({ menuSocialTitle: e.target.value })}
+                        placeholder="Ej: REDES SOCIALES"
+                      />
+                    </div>
+                    <div>
+                      <Label>Subtítulo Redes Sociales</Label>
+                      <Input
+                        value={state.messages.menuSocialTagline || ''}
+                        onChange={(e) => updateMessages({ menuSocialTagline: e.target.value })}
+                        placeholder="Ej: Conéctate con nosotros"
+                      />
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
