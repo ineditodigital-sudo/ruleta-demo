@@ -92,6 +92,17 @@ export interface CarouselConfig {
   active: boolean;
 }
 
+export interface QRItem {
+  id: string;
+  label: string;
+  imageUrl: string;
+  type: 'recruitment' | 'providers' | 'facebook' | 'instagram' | 'linkedin' | 'custom';
+  color?: string; // For main menu buttons
+  location: 'main' | 'social';
+  active: boolean;
+}
+
+
 export interface AppState {
   brand: BrandConfig;
   prizes: Prize[];
@@ -100,4 +111,5 @@ export interface AppState {
   gameConfig: GameConfig;
   demoConfig: DemoConfig;
   carouselConfig: CarouselConfig;
-}
+  qrs: QRItem[];
+}

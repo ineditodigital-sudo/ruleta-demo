@@ -114,7 +114,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
   });
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [activeQr, setActiveQr] = useState<{ title: string; image: string } | null>(null);
+  const [activeQr, setActiveQr] = useState<{ title: string; image: string; from: 'menu' | 'socialMenu' } | null>(null);
 
   const cardBg = state.brand.cardBackgroundColor || 'rgba(0, 0, 0, 0.7)';
   const finalCardBg = cardBg.startsWith('#') ? `${cardBg}cc` : cardBg;
@@ -403,42 +403,46 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                   </div>
                 </motion.div>
 
-                <div className="grid grid-cols-1 gap-4 sm:gap-6 w-full max-w-2xl">
-                  <MenuButton 
-                    onClick={() => setStep('wheel')}
-                    icon={<Target />}
-                    label="RULETA DE PREMIOS"
-                    color={state.brand.menuWheelColor || state.brand.primaryColor}
-                    textColor={state.brand.textColor}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full max-w-2xl">
+                  {/* Ruleta always at the top and full width */}
+                  <div className="sm:col-span-2">
                     <MenuButton 
-                      onClick={() => {
-                        setActiveQr({ title: 'RECLUTAMIENTO', image: '/qr/QR-RECLUTAMIENTO-AUMOVO-HD@2x.png' });
-                        setStep('qrView');
-                      }}
-                      icon={<User />}
-                      label="RECLUTAMIENTO"
-                      color={state.brand.menuRecruitmentColor || "#10b981"}
-                      textColor={state.brand.textColor}
-                    />
-                    <MenuButton 
-                      onClick={() => setStep('socialMenu')}
-                      icon={<Sparkles />}
-                      label="REDES SOCIALES"
-                      color={state.brand.menuSocialColor || "#f59e0b"}
+                      onClick={() => setStep('wheel')}
+                      icon={<Target />}
+                      label="RULETA DE PREMIOS"
+                      color={state.brand.menuWheelColor || state.brand.primaryColor}
                       textColor={state.brand.textColor}
                     />
                   </div>
+
+                  {/* Dynamic Main Menu QRs */}
+                  {state.qrs
+                    .filter(qr => qr.location === 'main' && qr.active)
+                    .map(qr => (
+                      <MenuButton 
+                        key={qr.id}
+                        onClick={() => {
+                          setActiveQr({ title: qr.label, image: qr.imageUrl, from: 'menu' });
+                          setStep('qrView');
+                        }}
+                        icon={qr.type === 'recruitment' ? <User /> : <Sparkles />}
+                        label={qr.label}
+                        color={qr.color || (
+                          qr.type === 'recruitment' ? (state.brand.menuRecruitmentColor || '#10b981') : 
+                          qr.type === 'providers' ? (state.brand.menuProvidersColor || '#6366f1') : 
+                          state.brand.primaryColor
+                        )}
+                        textColor={state.brand.textColor}
+                      />
+                    ))
+                  }
+
+                  {/* Social Menu always at the end */}
                   <MenuButton 
-                    onClick={() => {
-                      setActiveQr({ title: 'PROVEEDORES', image: '/qr/qr-proveedores.png' });
-                      setStep('qrView');
-                    }}
+                    onClick={() => setStep('socialMenu')}
                     icon={<Sparkles />}
-                    label="PROVEEDORES"
-                    color={state.brand.menuProvidersColor || "#6366f1"}
-                    disabled={true}
+                    label={state.messages.menuSocialTitle || "REDES SOCIALES"}
+                    color={state.brand.menuSocialColor || "#f59e0b"}
                     textColor={state.brand.textColor}
                   />
                 </div>
@@ -477,45 +481,38 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                   </h2>
                 </header>
                 
-                <div className="flex flex-col gap-6 w-full">
-                  {/* Facebook QR Block */}
-                  <div className="flex flex-col items-center">
-                    <span 
-                      className="text-black font-black uppercase tracking-[0.2em] mb-2 text-sm"
-                      style={{ color: '#000000', display: 'block', visibility: 'visible', opacity: 1 }}
-                    >
-                      Facebook
-                    </span>
-                    <div className="bg-white p-4 rounded-2xl shadow-lg border border-black/5">
-                      <img src="/qr/QR-FACEBOOK-AUMOVIO.png" alt="Facebook QR" className="w-[116px] h-[116px] object-contain" />
+                <div 
+                  className={`
+                    grid gap-x-4 gap-y-6 w-full overflow-y-auto pr-2 custom-scrollbar
+                    ${state.qrs.filter(q => !['recruitment', 'providers'].includes(q.type) && q.active).length > 2 
+                      ? 'grid-cols-2 sm:grid-cols-2' 
+                      : 'grid-cols-1 sm:grid-cols-2'}
+                  `}
+                  style={{ maxHeight: '50vh' }}
+                >
+                  {state.qrs.filter(q => !['recruitment', 'providers'].includes(q.type) && q.active).map(qr => (
+                    <div key={qr.id} className="flex flex-col items-center gap-3">
+                      <span 
+                        className="font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs text-center px-1"
+                        style={{ color: state.brand.textColor || '#ffffff' }}
+                      >
+                        {qr.label}
+                      </span>
+                      <div 
+                        onClick={() => {
+                          setActiveQr({ title: qr.label, image: qr.imageUrl, from: 'socialMenu' });
+                          setStep('qrView');
+                        }}
+                        className="bg-white p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl border border-black/5 transform transition-transform hover:scale-105 duration-300 cursor-pointer"
+                      >
+                        <img 
+                          src={qr.imageUrl} 
+                          alt={`${qr.label} QR`} 
+                          className="w-[100px] h-[100px] sm:w-[140px] sm:h-[140px] object-contain" 
+                        />
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Instagram QR Block */}
-                  <div className="flex flex-col items-center">
-                    <span 
-                      className="text-black font-black uppercase tracking-[0.2em] mb-2 text-sm"
-                      style={{ color: '#000000', display: 'block', visibility: 'visible', opacity: 1 }}
-                    >
-                      Instagram
-                    </span>
-                    <div className="bg-white p-4 rounded-2xl shadow-lg border border-black/5">
-                      <img src="/qr/QR-INSTAGRAM-AUMOVIO.png" alt="Instagram QR" className="w-[116px] h-[116px] object-contain" />
-                    </div>
-                  </div>
-
-                  {/* LinkedIn QR Block */}
-                  <div className="flex flex-col items-center">
-                    <span 
-                      className="text-black font-black uppercase tracking-[0.2em] mb-2 text-sm"
-                      style={{ color: '#000000', display: 'block', visibility: 'visible', opacity: 1 }}
-                    >
-                      LinkedIn
-                    </span>
-                    <div className="bg-white p-4 rounded-2xl shadow-lg border border-black/5">
-                      <img src="/qr/QR-LINKEDIN-AUMOVIO.png" alt="LinkedIn QR" className="w-[116px] h-[116px] object-contain" />
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 <motion.button 
@@ -561,12 +558,6 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                     target.src = "https://placehold.co/400x400/white/black?text=QR+" + activeQr.title;
                   }}
                 />
-                {activeQr.title === 'PROVEEDORES' && (
-                  <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center rounded-[3rem] p-4 text-center">
-                    <p className="text-black font-black text-2xl uppercase">Próximamente</p>
-                    <p className="text-black/60 font-bold mt-2">QR de Proveedores en desarrollo</p>
-                  </div>
-                )}
               </div>
               
               <p className="text-white/60 text-lg font-bold text-center animate-pulse">
@@ -576,7 +567,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => activeQr.title === 'RECLUTAMIENTO' || activeQr.title === 'PROVEEDORES' ? setStep('menu') : setStep('socialMenu')} 
+                onClick={() => setStep(activeQr.from)} 
                 className="mt-8 flex items-center justify-center gap-3 font-black text-lg uppercase tracking-widest px-12 py-5 rounded-[2rem] shadow-2xl text-white w-full max-w-[320px] transition-all"
                 style={{ 
                   background: `linear-gradient(135deg, ${state.brand.primaryColor} 0%, ${state.brand.secondaryColor || state.brand.primaryColor} 100%)`,

@@ -10,7 +10,7 @@ import { Switch } from '@/app/components/ui/switch';
 import { Slider } from '@/app/components/ui/slider';
 import { Badge } from '@/app/components/ui/badge';
 import { Textarea } from '@/app/components/ui/textarea';
-import { Palette, Trophy, Settings, Download, Plus, Trash2, Eye, EyeOff, Users, MonitorSmartphone, Sparkles, Monitor, Lock, BarChart, Gift, Edit, Layout, Image as ImageIcon, Menu, Upload, Video } from 'lucide-react';
+import { Palette, Trophy, Settings, Download, Plus, Trash2, Eye, EyeOff, Users, MonitorSmartphone, Sparkles, Monitor, Lock, BarChart, Gift, Edit, Layout, Image as ImageIcon, Menu, Upload, Video, QrCode } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/app/components/ui/sheet';
 import { Prize } from '@/types';
@@ -26,6 +26,9 @@ export const AdminView: React.FC = () => {
     updateGameConfig,
     updateDemoConfig,
     updateCarouselConfig,
+    updateQR,
+    addQR,
+    deleteQR,
     resetDailyCount,
     exportLeads,
   } = useApp();
@@ -141,6 +144,7 @@ export const AdminView: React.FC = () => {
                 {activeTab === 'demo' && <Monitor className="w-5 h-5 text-white" />}
                 {activeTab === 'leads' && <Users className="w-5 h-5 text-white" />}
                 {activeTab === 'config' && <Settings className="w-5 h-5 text-white" />}
+                {activeTab === 'qrs' && <QrCode className="w-5 h-5 text-white" />}
               </div>
               <div>
                 <span className="text-white font-bold block leading-none">
@@ -151,6 +155,7 @@ export const AdminView: React.FC = () => {
                   {activeTab === 'demo' && 'Demo'}
                   {activeTab === 'leads' && 'Leads'}
                   {activeTab === 'config' && 'Configuración'}
+                  {activeTab === 'qrs' && 'QRs'}
                 </span>
                 <span className="text-xs text-slate-400">Navegar apartados</span>
               </div>
@@ -184,6 +189,7 @@ export const AdminView: React.FC = () => {
                     { id: 'demo', label: 'Demo', icon: Monitor },
                     { id: 'leads', label: 'Leads', icon: Users },
                     { id: 'config', label: 'Configuración', icon: Settings },
+                    { id: 'qrs', label: 'QRs', icon: QrCode },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -260,7 +266,7 @@ export const AdminView: React.FC = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="hidden md:grid w-full grid-cols-7 h-auto gap-2 bg-transparent p-0">
+          <TabsList className="hidden md:grid w-full grid-cols-8 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger value="prizes" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
               <Gift className="w-4 h-4 mr-2" />
               Premios
@@ -280,6 +286,10 @@ export const AdminView: React.FC = () => {
             <TabsTrigger value="demo" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
               <Monitor className="w-4 h-4 mr-2" />
               Demo
+            </TabsTrigger>
+            <TabsTrigger value="qrs" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
+              <QrCode className="w-4 h-4 mr-2" />
+              QRs
             </TabsTrigger>
             <TabsTrigger value="leads" className="bg-slate-800 data-[state=active]:bg-indigo-600 text-white border border-slate-700 h-12">
               <Users className="w-4 h-4 mr-2" />
@@ -753,10 +763,10 @@ export const AdminView: React.FC = () => {
 
                 {/* Menu Customization Section */}
                 <div className="pt-4 border-t">
-                  <h3 className="font-semibold mb-4 text-indigo-400 mt-6 uppercase text-xs tracking-[0.2em]">Configuración de Colores del Menú</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <h3 className="font-semibold mb-4 text-indigo-400 mt-6 uppercase text-xs tracking-[0.2em]">Configuración de Colores del Menú Principal</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Ruleta</Label>
+                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Ruleta (Principal)</Label>
                       <div className="flex items-center gap-2">
                         <Input
                           type="color"
@@ -770,21 +780,7 @@ export const AdminView: React.FC = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Recluta.</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="color"
-                          value={state.brand.menuRecruitmentColor || '#10b981'}
-                          onChange={(e) => updateBrand({ menuRecruitmentColor: e.target.value })}
-                          className="w-10 h-10 p-1"
-                        />
-                        <span className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-white/10 flex-1 text-center truncate shadow-sm">
-                          {state.brand.menuRecruitmentColor || '#10B981'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Redes</Label>
+                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Redes Sociales (Acceso)</Label>
                       <div className="flex items-center gap-2">
                         <Input
                           type="color"
@@ -797,21 +793,10 @@ export const AdminView: React.FC = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase opacity-60">Botón Prov.</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="color"
-                          value={state.brand.menuProvidersColor || '#6366f1'}
-                          onChange={(e) => updateBrand({ menuProvidersColor: e.target.value })}
-                          className="w-10 h-10 p-1"
-                        />
-                        <span className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-white/10 flex-1 text-center truncate shadow-sm">
-                          {state.brand.menuProvidersColor || '#6366F1'}
-                        </span>
-                      </div>
-                    </div>
                   </div>
+                  <p className="text-[10px] text-slate-500 mt-4 italic">
+                    Nota: Los colores de Reclutamiento, Proveedores y botones personalizados se gestionan desde la pestaña "QRs".
+                  </p>
                 </div>
 
                 <div className="pt-4 border-t">
@@ -1327,6 +1312,193 @@ export const AdminView: React.FC = () => {
                     <p><span className="text-muted-foreground">Height:</span> {state.demoConfig.screenHeight}</p>
                     <p><span className="text-muted-foreground">Border Radius:</span> {state.demoConfig.screenBorderRadius}</p>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* QRs Tab */}
+          <TabsContent value="qrs" className="space-y-6 pb-20">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Gestión de QRs y Accesos</CardTitle>
+                    <CardDescription>
+                      Personaliza los códigos QR y los textos que aparecen en el menú principal y sección social.
+                    </CardDescription>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button 
+                      onClick={() => {
+                        const id = `qr-main-${Date.now()}`;
+                        addQR({
+                          id,
+                          label: 'NUEVO BOTÓN',
+                          imageUrl: 'https://placehold.co/400x400/white/black?text=SUBIR+QR',
+                          type: 'custom',
+                          location: 'main',
+                          color: state.brand.primaryColor,
+                          active: true
+                        });
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 h-10 px-4"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      QR Único
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        const id = `qr-social-${Date.now()}`;
+                        addQR({
+                          id,
+                          label: 'NUEVA RED SOCIAL',
+                          imageUrl: 'https://placehold.co/400x400/white/black?text=SUBIR+QR',
+                          type: 'custom',
+                          location: 'social',
+                          active: true
+                        });
+                      }}
+                      className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 h-10 px-4"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Red Social
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 gap-6">
+                  {state.qrs.map((qr) => (
+                    <div key={qr.id} className="p-6 bg-slate-800/50 rounded-xl border border-white/10 space-y-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-indigo-500/20 rounded-lg">
+                            <QrCode className="w-5 h-5 text-indigo-400" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-white uppercase tracking-wider">{qr.type === 'custom' ? 'QR Personalizado' : qr.type}</h3>
+                            <p className="text-xs text-slate-400">Identificador: {qr.id}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <Label className="text-xs text-slate-400 hidden sm:block">Activo</Label>
+                           <Switch 
+                            checked={qr.active} 
+                            onCheckedChange={(checked) => updateQR(qr.id, { active: checked })}
+                          />
+                          <Button 
+                            variant="destructive" 
+                            size="icon" 
+                            className="w-8 h-8 ml-2"
+                            onClick={() => {
+                              if (confirm('¿Estás seguro de querer eliminar este QR?')) {
+                                deleteQR(qr.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-indigo-300 font-bold text-xs uppercase tracking-widest block mb-2">Ubicación</Label>
+                              <Badge variant={qr.location === 'main' ? 'default' : 'secondary'} className={`py-1.5 px-3 rounded-lg uppercase text-[10px] tracking-widest ${qr.location === 'main' ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                                {qr.location === 'main' ? 'Menú Principal' : 'Sección Social'}
+                              </Badge>
+                            </div>
+                            {qr.location === 'main' && (
+                              <div className="space-y-2">
+                                <Label className="text-indigo-300 font-bold text-xs uppercase tracking-widest">Color del Botón</Label>
+                                <div className="flex gap-2">
+                                  <Input 
+                                    type="color"
+                                    value={qr.color || state.brand.primaryColor}
+                                    onChange={(e) => updateQR(qr.id, { color: e.target.value })}
+                                    className="w-10 h-10 p-1"
+                                  />
+                                  <Input 
+                                    value={qr.color || state.brand.primaryColor}
+                                    onChange={(e) => updateQR(qr.id, { color: e.target.value })}
+                                    className="flex-1 bg-slate-900 border-white/10 text-[10px] sm:text-xs text-white h-10"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-indigo-300 font-bold text-xs uppercase tracking-widest">Texto de Etiqueta</Label>
+                            <Input 
+                              value={qr.label}
+                              onChange={(e) => updateQR(qr.id, { label: e.target.value })}
+                              placeholder="Ej: SÍGUENOS EN FACEBOOK"
+                              className="bg-slate-900 border-white/10 text-white"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-indigo-300 font-bold text-xs uppercase tracking-widest">Imagen del QR</Label>
+                            <div className="flex flex-col gap-3">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                id={`qr-upload-${qr.id}`}
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      updateQR(qr.id, { imageUrl: reader.result as string });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                className="flex-1 bg-slate-900 border-white/10 hover:bg-slate-800 text-white"
+                                onClick={() => document.getElementById(`qr-upload-${qr.id}`)?.click()}
+                              >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Subir
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                className="flex-1 bg-slate-900 border-white/10 hover:bg-slate-800 text-red-400"
+                                onClick={() => {
+                                  if (confirm('¿Estás seguro de querer quitar la imagen de este QR?')) {
+                                    updateQR(qr.id, { imageUrl: '' });
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Quitar
+                              </Button>
+                            </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-inner border-4 border-slate-700/50">
+                           <img 
+                            src={qr.imageUrl} 
+                            alt={qr.label} 
+                            className="w-32 h-32 object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://placehold.co/200x200/white/black?text=QR+" + qr.type;
+                            }}
+                          />
+                          <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">{qr.label}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

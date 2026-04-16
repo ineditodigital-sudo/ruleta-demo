@@ -21,7 +21,11 @@ interface AppContextType {
   updateGameConfig: (config: Partial<GameConfig>) => void;
   updateDemoConfig: (config: Partial<DemoConfig>) => void;
   updateCarouselConfig: (config: Partial<CarouselConfig>) => void;
+  updateQR: (id: string, qr: Partial<QRItem>) => void;
+  addQR: (qr: QRItem) => void;
+  deleteQR: (id: string) => void;
   resetDailyCount: () => void;
+
   exportLeads: () => void;
 }
 
@@ -142,6 +146,13 @@ const defaultState: AppState = {
     grayscale: false,
     active: true,
   },
+  qrs: [
+    { id: 'qr-recruitment', label: 'RECLUTAMIENTO', imageUrl: '/qr/QR-RECLUTAMIENTO-AUMOVO-HD@2x.png', type: 'recruitment', location: 'main', active: true },
+    { id: 'qr-providers', label: 'PROVEEDORES', imageUrl: '/qr/qr-proveedores.png', type: 'providers', location: 'main', active: true },
+    { id: 'qr-facebook', label: 'FACEBOOK', imageUrl: '/qr/QR-FACEBOOK-AUMOVIO.png', type: 'facebook', location: 'social', active: true },
+    { id: 'qr-instagram', label: 'INSTAGRAM', imageUrl: '/qr/QR-INSTAGRAM-AUMOVIO.png', type: 'instagram', location: 'social', active: true },
+    { id: 'qr-linkedin', label: 'LINKEDIN', imageUrl: '/qr/QR-LINKEDIN-AUMOVIO.png', type: 'linkedin', location: 'social', active: true },
+  ],
 };
 
 // ── Migration helper ───────────────────────────────────────────────────────────
@@ -180,6 +191,15 @@ function applyMigrations(parsed: AppState): AppState {
     parsed.messages.menuSocialTitle = defaultState.messages.menuSocialTitle;
   if (parsed.messages && parsed.messages.menuSocialTagline === undefined)
     parsed.messages.menuSocialTagline = defaultState.messages.menuSocialTagline;
+  
+  if (!parsed.qrs) {
+    parsed.qrs = defaultState.qrs;
+  } else {
+    parsed.qrs = parsed.qrs.map(qr => ({
+      ...qr,
+      location: qr.location || (['recruitment', 'providers'].includes(qr.type) ? 'main' : 'social')
+    }));
+  }
 
   return parsed;
 }
@@ -287,6 +307,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateCarouselConfig = (config: Partial<CarouselConfig>) =>
     setState((prev) => ({ ...prev, carouselConfig: { ...prev.carouselConfig, ...config } }));
 
+  const updateQR = (id: string, qr: Partial<QRItem>) =>
+    setState((prev) => ({
+      ...prev,
+      qrs: prev.qrs.map((item) => (item.id === id ? { ...item, ...qr } : item)),
+    }));
+
+  const addQR = (qr: QRItem) =>
+    setState((prev) => ({ ...prev, qrs: [...prev.qrs, qr] }));
+
+  const deleteQR = (id: string) =>
+    setState((prev) => ({ ...prev, qrs: prev.qrs.filter((item) => item.id !== id) }));
+
   const resetDailyCount = () =>
     setState((prev) => ({ ...prev, gameConfig: { ...prev.gameConfig, currentDailyCount: 0 } }));
 
@@ -327,6 +359,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateGameConfig,
         updateDemoConfig,
         updateCarouselConfig,
+        updateQR,
+        addQR,
+        deleteQR,
         resetDailyCount,
         exportLeads,
       }}
