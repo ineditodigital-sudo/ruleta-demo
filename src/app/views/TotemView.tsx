@@ -484,13 +484,13 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                 <div 
                   className={`
                     grid gap-x-4 gap-y-6 w-full overflow-y-auto pr-2 custom-scrollbar
-                    ${state.qrs.filter(q => !['recruitment', 'providers'].includes(q.type) && q.active).length > 2 
+                    ${state.qrs.filter(q => q.location === 'social' && q.active).length > 2 
                       ? 'grid-cols-2 sm:grid-cols-2' 
                       : 'grid-cols-1 sm:grid-cols-2'}
                   `}
                   style={{ maxHeight: '50vh' }}
                 >
-                  {state.qrs.filter(q => !['recruitment', 'providers'].includes(q.type) && q.active).map(qr => (
+                  {state.qrs.filter(q => q.location === 'social' && q.active).map(qr => (
                     <div key={qr.id} className="flex flex-col items-center gap-3">
                       <span 
                         className="font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs text-center px-1"
