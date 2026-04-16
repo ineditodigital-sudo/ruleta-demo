@@ -235,7 +235,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
               className="flex flex-col items-center gap-10 relative z-10 text-center"
             >
 
-              {(state.brand.centerLogoUrl && state.brand.centerLogoUrl.trim() !== '') || (state.brand.logoUrl && state.brand.logoUrl.trim() !== '') ? (
+              {state.brand.logoUrl && state.brand.logoUrl.trim() !== '' ? (
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -243,7 +243,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                   className="flex flex-col items-center gap-4"
                 >
                   <img
-                    src={state.brand.centerLogoUrl || state.brand.logoUrl}
+                    src={state.brand.logoUrl}
                     alt="Logo"
                     className="h-24 sm:h-32 md:h-40 object-contain max-w-[80vw] drop-shadow-2xl"
                     onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
@@ -385,7 +385,7 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
                 >
                   <div className="relative p-2">
                     <div className="absolute inset-0 blur-2xl opacity-30 bg-white rounded-full" />
-                    <img src={state.brand.centerLogoUrl || state.brand.logoUrl} alt="Logo" className="h-20 sm:h-28 object-contain relative z-10 drop-shadow-2xl" />
+                    <img src={state.brand.logoUrl} alt="Logo" className="h-20 sm:h-28 object-contain relative z-10 drop-shadow-2xl" />
                   </div>
                   <div className="text-center">
                     <span 
@@ -601,10 +601,10 @@ export const TotemView: React.FC<TotemViewProps> = ({ isDemoMode = false }) => {
               <div className="absolute -bottom-24 -left-24 w-48 md:w-64 h-48 md:h-64 rounded-full blur-[80px] opacity-30 animate-pulse" style={{ backgroundColor: state.brand.secondaryColor }} />
 
               <div className="flex justify-center mb-6 md:mb-8 relative z-10">
-                {(state.brand.centerLogoUrl && state.brand.centerLogoUrl.trim() !== '') || (state.brand.logoUrl && state.brand.logoUrl.trim() !== '') ? (
+                {state.brand.logoUrl && state.brand.logoUrl.trim() !== '' ? (
                   <div className="flex flex-col items-center gap-2">
                     <img 
-                      src={state.brand.centerLogoUrl || state.brand.logoUrl} 
+                      src={state.brand.logoUrl} 
                       alt="Logo" 
                       className="h-16 sm:h-20 md:h-14 lg:h-16 object-contain max-w-[80%] drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
                       onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
